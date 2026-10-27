@@ -162,20 +162,29 @@
     .form-error { min-height: 18px; margin: -8px 0 10px; color: var(--danger); font-size: 13px; }
 
     /* ── 無連結畫面 ── */
-    .gate { max-width: 400px; margin: 10vh auto 0; padding: 28px 24px; text-align: center; border: 0; }
-    .gate .logo { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 14px; }
-    .gate .logo svg { width: 32px; height: 32px; }
-    .gate h2 { margin: 0 0 6px; font-size: 20px; }
-    .gate p { margin: 0 0 18px; color: var(--ink-2); font-size: 14px; }
-    .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; text-align: left; }
-    .person { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-size: 15px; font-weight: 700; }
-    .person:hover { border-color: var(--ink-3); }
-    .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--t); color: var(--c); font-size: 14px; font-weight: 700; }
-    .pin-step .avatar { width: 56px; height: 56px; font-size: 22px; margin: 0 auto 10px; }
-    .pin-input { display: block; width: 180px; height: 56px; margin: 0 auto 8px; border: 1px solid var(--line); border-radius: 10px; text-align: center; font-size: 26px; letter-spacing: 14px; padding-left: 14px; font-variant-numeric: tabular-nums; }
-    .pin-input:focus { outline: none; border-color: var(--ink); }
-    .gate .form-error { margin: 0 0 12px; }
-    .gate .back { border: 0; background: none; color: var(--ink-2); font-size: 13px; padding: 8px; }
+    /* ── 登入：選人畫面（全螢幕深色） ── */
+    .gate { position: fixed; inset: 0; z-index: 30; overflow-y: auto; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; padding: 72px 16px 40px; text-align: center; }
+    .gate-brand { position: absolute; top: 22px; left: 28px; font-size: 18px; font-weight: 700; letter-spacing: .5px; color: #fff; }
+    .gate h2 { margin: 0 0 32px; font-size: clamp(26px, 5vw, 42px); font-weight: 600; letter-spacing: .5px; }
+    .gate .hint { margin: -20px 0 28px; color: #8c8c8c; font-size: 14px; }
+    .people { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(16px, 3vw, 32px); }
+    .person { width: clamp(96px, 12vw, 150px); border: 0; padding: 0; background: none; color: #8c8c8c; font-size: clamp(14px, 1.6vw, 18px); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .tile { position: relative; width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--c); display: grid; place-items: center; color: #fff; font-size: clamp(38px, 5vw, 60px); font-weight: 700; outline: 3px solid transparent; outline-offset: 0; transition: outline-color .15s, transform .15s; }
+    .tile .lock { position: absolute; left: 10px; bottom: 10px; width: 16px; height: 16px; opacity: .85; }
+    .person:hover, .person:focus-visible { color: #fff; outline: none; }
+    .person:hover .tile, .person:focus-visible .tile { outline-color: #fff; transform: scale(1.04); }
+    .gate .empty-list { color: #8c8c8c; }
+    .pin-step .tile { width: 84px; margin: 0 auto 18px; font-size: 36px; }
+    .pin-step h2 { margin-bottom: 8px; font-size: clamp(22px, 4vw, 30px); }
+    .pin-step p { margin: 0 0 24px; color: #8c8c8c; font-size: 14px; }
+    .pin-boxes { position: relative; display: flex; justify-content: center; gap: 12px; margin-bottom: 14px; }
+    .pin-boxes span { width: 56px; height: 64px; border: 1.5px solid #555; border-radius: 8px; display: grid; place-items: center; font-size: 28px; transition: border-color .15s; }
+    .pin-boxes span.on { border-color: #fff; }
+    .pin-boxes input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; font-size: 16px; }
+    .pin-boxes:focus-within span.next { border-color: #fff; }
+    .gate .form-error { min-height: 20px; margin: 0 0 18px; color: #ff6b5e; }
+    .gate .back { border: 0; background: none; color: #8c8c8c; font-size: 14px; padding: 8px 12px; }
+    .gate .back:hover { color: #fff; }
 
     .toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translate(-50%, -8px); background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 16px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: .2s; z-index: 20; }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -224,20 +233,23 @@
       </div>
     </header>
 
-    <section class="card gate" id="gate" hidden>
+    <section class="gate" id="gate" hidden>
+      <div class="gate-brand">保母時間</div>
       <div id="pickStep">
-        <h2>你是誰？</h2>
-        <p id="gateText">點自己的名字，再輸入你的 4 位數密碼。</p>
+        <h2>誰要使用？</h2>
+        <p class="hint" id="gateText" hidden></p>
         <div class="people" id="people"></div>
       </div>
       <form class="pin-step" id="pinStep" hidden>
-        <div class="avatar" id="pinAvatar"></div>
+        <div class="tile" id="pinAvatar"></div>
         <h2 id="pinTitle"></h2>
-        <p>輸入你的 4 位數密碼</p>
-        <input class="pin-input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" aria-label="4 位數密碼" />
+        <p>輸入 PIN 碼以進入</p>
+        <div class="pin-boxes" id="pinBoxes">
+          <span></span><span></span><span></span><span></span>
+          <input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" aria-label="4 位數 PIN 碼" />
+        </div>
         <div class="form-error" id="pinError" role="alert"></div>
-        <button class="primary" type="submit" id="pinSubmit" style="width:180px">進入</button>
-        <div><button class="back" type="button" id="pinBack">← 不是我</button></div>
+        <button class="back" type="button" id="pinBack">← 返回</button>
       </form>
     </section>
 
@@ -424,43 +436,52 @@
       data = null; picked.clear();
       $('#gate').hidden = false; $('#calendarApp').hidden = true; $('#who').hidden = true; $('#actionBar').hidden = true;
       $('#pickStep').hidden = false; $('#pinStep').hidden = true;
-      $('#gateText').textContent = text || '點自己的名字，再輸入你的 4 位數密碼。';
+      $('#gateText').textContent = text || ''; $('#gateText').hidden = !text;
       try {
         const people = await api.directory();
         let sitterIndex = 0;
         $('#people').innerHTML = people.map(p => {
-          const [c, t] = p.role === 'sitter' ? palette[sitterIndex++ % palette.length] : ['#666666', '#f2f2f2'];
-          return `<button class="person" type="button" data-id="${p.id}" data-name="${esc(p.display_name)}" data-c="${c}" data-t="${t}"><span class="avatar" style="--c:${c};--t:${t}">${esc([...p.display_name][0])}</span>${esc(p.display_name)}</button>`;
-        }).join('') || '<p>名單還是空的，請聯絡管理者。</p>';
+          const c = p.role === 'sitter' ? palette[sitterIndex++ % palette.length][0] : '#5a5a5a';
+          return `<button class="person" type="button" data-id="${p.id}" data-name="${esc(p.display_name)}" data-c="${c}"><span class="tile" style="--c:${c}">${esc([...p.display_name][0].toUpperCase())}<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="#fff" stroke-width="1.5"/></svg></span>${esc(p.display_name)}</button>`;
+        }).join('') || '<p class="empty-list">名單還是空的，請聯絡管理者。</p>';
       } catch (err) {
-        $('#people').innerHTML = `<p>讀取名單失敗：${esc(err.message)}</p>`;
+        $('#people').innerHTML = `<p class="empty-list">讀取名單失敗：${esc(err.message)}</p>`;
       }
     }
 
     function openPin(button) {
       loginPerson = button.dataset.id;
       const av = $('#pinAvatar');
-      av.style.setProperty('--c', button.dataset.c); av.style.setProperty('--t', button.dataset.t);
-      av.textContent = [...button.dataset.name][0];
-      $('#pinTitle').textContent = `嗨，${button.dataset.name}`;
-      $('#pinError').textContent = ''; $('#pinInput').value = '';
+      av.style.setProperty('--c', button.dataset.c);
+      av.textContent = [...button.dataset.name][0].toUpperCase();
+      $('#pinTitle').textContent = button.dataset.name;
+      $('#pinError').textContent = ''; $('#pinInput').value = ''; paintPinBoxes();
       $('#pickStep').hidden = true; $('#pinStep').hidden = false;
       $('#pinInput').focus();
+    }
+
+    function paintPinBoxes() {
+      const n = $('#pinInput').value.length;
+      document.querySelectorAll('#pinBoxes span').forEach((box, i) => {
+        box.textContent = i < n ? '•' : '';
+        box.classList.toggle('on', i < n);
+        box.classList.toggle('next', i === n);
+      });
     }
 
     async function submitPin(event) {
       event.preventDefault();
       const pin = $('#pinInput').value.trim();
       if (!/^\d{4}$/.test(pin)) { $('#pinError').textContent = '請輸入 4 位數字。'; return; }
-      $('#pinSubmit').disabled = true;
+      $('#pinInput').disabled = true;
       try {
         token = await api.login(loginPerson, pin);
         safeSet(TOKEN_KEY, token);
         await load();
       } catch (err) {
-        $('#pinError').textContent = err.message; $('#pinInput').value = ''; $('#pinInput').focus();
+        $('#pinError').textContent = err.message; $('#pinInput').value = ''; paintPinBoxes(); $('#pinInput').focus();
       } finally {
-        $('#pinSubmit').disabled = false;
+        $('#pinInput').disabled = false;
       }
     }
 
@@ -652,7 +673,10 @@
     });
     $('#people').onclick = e => { const b = e.target.closest('[data-id]'); if (b) openPin(b); };
     $('#pinStep').addEventListener('submit', submitPin);
-    $('#pinInput').oninput = e => { if (/^\d{4}$/.test(e.target.value)) $('#pinStep').requestSubmit(); };
+    $('#pinInput').oninput = e => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); paintPinBoxes();
+      if (e.target.value.length === 4) $('#pinStep').requestSubmit();
+    };
     $('#pinBack').onclick = () => { $('#pickStep').hidden = false; $('#pinStep').hidden = true; };
     $('#switchUser').onclick = switchUser;
     document.addEventListener('visibilitychange', () => { if (!document.hidden && data) load(); });
