@@ -43,7 +43,15 @@
     .brand p { margin: 0; font-size: 12px; color: var(--ink-2); }
     .who { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .badge { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; font-weight: 600; }
-    .badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--brand)); }
+    .badge .face { font-size: 16px; line-height: 1; }
+    .faces { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 14px; }
+    .faces button { aspect-ratio: 1; border: 0; border-radius: 10px; background: transparent; font-size: 24px; line-height: 1; padding: 0; }
+    .faces button:hover { background: var(--line-2); }
+    .faces button[aria-pressed="true"] { background: var(--line-2); box-shadow: inset 0 0 0 1.5px var(--ink); }
+    .faces .letter { font-size: 15px; font-weight: 700; color: var(--ink-2); }
+    .face-preview { width: 72px; height: 72px; margin: 0 auto 14px; border-radius: 12px; background: var(--c); color: #fff; display: grid; place-items: center; font-size: 38px; font-weight: 700; }
+    .slot .emoji { width: 22px; flex: none; font-size: 20px; text-align: center; line-height: 1; }
+    .filter .emoji { font-size: 14px; line-height: 1; }
     .ghost { height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-2); font-size: 13px; font-weight: 600; }
     .ghost:hover { background: var(--brand-soft); }
 
@@ -227,8 +235,8 @@
     <header class="topbar">
       <div class="brand"><h1>保母時間</h1><p id="tagline" hidden></p></div>
       <div class="who" id="who" hidden>
-        <span class="badge" id="badge"><i></i><span id="badgeText"></span></span>
-        <button class="ghost" id="rename" hidden>改名字</button>
+        <span class="badge" id="badge"><span class="face" id="badgeFace"></span><span id="badgeText"></span></span>
+        <button class="ghost" id="rename" hidden>設定</button>
         <button class="ghost" id="switchUser" hidden>換人</button>
       </div>
     </header>
@@ -296,8 +304,11 @@
 
   <dialog id="nameDialog">
     <form class="sheet" id="nameForm">
-      <h3>改顯示名字</h3>
-      <p class="sub">主人看到的會是這個名字。</p>
+      <h3>個人設定</h3>
+      <p class="sub">頭像和名字會顯示在登入畫面和月曆上。</p>
+      <div class="face-preview" id="facePreview"></div>
+      <div class="faces" id="faces" role="group" aria-label="選擇頭像"></div>
+      <label class="field"><span>或用手機鍵盤輸入任何表情符號</span><input id="faceInput" maxlength="8" placeholder="點這裡，切換到表情符號鍵盤" autocomplete="off" /></label>
       <label class="field"><span>名字</span><input id="nameInput" required maxlength="30" /></label>
       <div class="sheet-foot"><button class="secondary" type="button" id="cancelName">取消</button><button class="primary" type="submit">儲存</button></div>
     </form>
@@ -361,27 +372,29 @@
         read: (start, end) => call('calendar_read', { p_start: start, p_end: end }),
         addSlots: (dates, start, end, note) => call('calendar_add_slots', { p_dates: dates, p_start_time: start, p_end_time: end, p_note: note || null }),
         removeSlot: id => call('calendar_remove_slot', { p_slot_id: id }),
-        rename: name => call('calendar_rename', { p_name: name }),
+        updateProfile: (name, avatar) => call('calendar_update_profile', { p_name: name, p_avatar: avatar || null }),
       };
     }
 
     function createDemoApi(role) {
-      const sitters = [{ id: 's1', display_name: '佑宥' }, { id: 's2', display_name: '楚涵' }, { id: 's3', display_name: '小米' }];
+      const sitters = [{ id: 's1', display_name: '佑宥', avatar: '🐶' }, { id: 's2', display_name: '楚涵', avatar: '🐱' }, { id: 's3', display_name: '小米', avatar: null }];
+      const owner = { id: 'o1', display_name: 'Carol', avatar: null, role: 'owner' };
       const me = role === 'sitter' ? 's1' : null;
+      const meRow = () => me ? { ...sitters[0], role: 'sitter' } : owner;
       const today = new Date(); let n = 0;
       const slots = [];
       const add = (offset, who, s, e, note) => { const d = new Date(today); d.setDate(d.getDate() + offset); slots.push({ id: `d${n++}`, caregiver_id: who, available_on: key(d), starts_at: s, ends_at: e, note: note || null }); };
       [[0, 's1', '13:00', '18:00'], [1, 's2', '08:00', '12:00', '可接送'], [1, 's1', '18:00', '22:00'], [2, 's3', '08:00', '22:00'], [3, 's2', '13:00', '18:00'], [3, 's3', '18:00', '22:00'], [5, 's1', '08:00', '12:00'], [5, 's2', '08:00', '22:00'], [5, 's3', '13:00', '18:00'], [8, 's2', '18:00', '22:00'], [9, 's1', '13:00', '17:30'], [12, 's3', '08:00', '12:00']].forEach(a => add(...a));
       const visible = () => slots.filter(s => !me || s.caregiver_id === me);
       return {
-        read: async (start, end) => ({ role: role === 'sitter' ? 'sitter' : 'owner', profile_id: me, profiles: sitters.filter(s => !me || s.id === me), slots: visible().filter(s => s.available_on >= start && s.available_on <= end).sort((a, b) => (a.available_on + a.starts_at).localeCompare(b.available_on + b.starts_at)) }),
+        read: async (start, end) => ({ role: role === 'sitter' ? 'sitter' : 'owner', profile_id: me, me: meRow(), profiles: sitters.filter(s => !me || s.id === me), slots: visible().filter(s => s.available_on >= start && s.available_on <= end).sort((a, b) => (a.available_on + a.starts_at).localeCompare(b.available_on + b.starts_at)) }),
         addSlots: async (dates, start, end, note) => {
           if (dates.some(d => slots.some(s => s.caregiver_id === me && s.available_on === d && toMin(s.starts_at) < toMin(end) && toMin(start) < toMin(s.ends_at)))) throw new Error('有些日期和你已登記的時段重疊，請先取消舊時段或換個時間。');
           dates.forEach(d => slots.push({ id: `d${n++}`, caregiver_id: me, available_on: d, starts_at: start, ends_at: end, note: note || null }));
           return dates.length;
         },
         removeSlot: async id => { const i = slots.findIndex(s => s.id === id && s.caregiver_id === me); if (i < 0) throw new Error('找不到這個時段，或它不是你登記的。'); slots.splice(i, 1); return true; },
-        rename: async name => { sitters.find(s => s.id === me).display_name = name; return name; },
+        updateProfile: async (name, avatar) => { Object.assign(me ? sitters[0] : owner, { display_name: name, avatar: avatar || null }); return true; },
       };
     }
 
@@ -396,7 +409,10 @@
 
     const isSitter = () => data?.role === 'sitter';
     const todayKey = () => key(new Date());
-    const me = () => data?.profiles.find(p => p.id === data.profile_id);
+    const me = () => data?.me || data?.profiles.find(p => p.id === data.profile_id);
+    const face = p => p?.avatar || [...(p?.display_name || '?')][0].toUpperCase();
+    const profileOf = id => data?.profiles.find(p => p.id === id);
+    const FACES = ['🐶', '🐕', '🐩', '🐱', '🐈', '🐰', '🐹', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐸', '🐧', '🐥', '🦄', '🌸', '🌻', '🌈', '⭐', '🍀', '🍓'];
     const slotsOn = day => (data?.slots || []).filter(s => s.available_on === day && (!filter || s.caregiver_id === filter));
     const nameOf = id => data?.profiles.find(p => p.id === id)?.display_name || '保母';
 
@@ -442,7 +458,7 @@
         let sitterIndex = 0;
         $('#people').innerHTML = people.map(p => {
           const c = p.role === 'sitter' ? palette[sitterIndex++ % palette.length][0] : '#5a5a5a';
-          return `<button class="person" type="button" data-id="${p.id}" data-name="${esc(p.display_name)}" data-c="${c}"><span class="tile" style="--c:${c}">${esc([...p.display_name][0].toUpperCase())}<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="#fff" stroke-width="1.5"/></svg></span>${esc(p.display_name)}</button>`;
+          return `<button class="person" type="button" data-id="${p.id}" data-name="${esc(p.display_name)}" data-c="${c}" data-face="${esc(face(p))}"><span class="tile" style="--c:${c}">${esc(face(p))}<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2" fill="none" stroke="#fff" stroke-width="1.5"/></svg></span>${esc(p.display_name)}</button>`;
         }).join('') || '<p class="empty-list">名單還是空的，請聯絡管理者。</p>';
       } catch (err) {
         $('#people').innerHTML = `<p class="empty-list">讀取名單失敗：${esc(err.message)}</p>`;
@@ -453,7 +469,7 @@
       loginPerson = button.dataset.id;
       const av = $('#pinAvatar');
       av.style.setProperty('--c', button.dataset.c);
-      av.textContent = [...button.dataset.name][0].toUpperCase();
+      av.textContent = button.dataset.face;
       $('#pinTitle').textContent = button.dataset.name;
       $('#pinError').textContent = ''; $('#pinInput').value = ''; paintPinBoxes();
       $('#pickStep').hidden = true; $('#pinStep').hidden = false;
@@ -495,9 +511,9 @@
     function showApp() {
       $('#gate').hidden = true; $('#calendarApp').hidden = false; $('#who').hidden = false;
       const sitter = isSitter();
-      $('#badgeText').textContent = sitter ? (me()?.display_name || '保母') : '主人檢視';
-      $('#badge').style.setProperty('--c', sitter ? colors[data.profile_id]?.[0] : 'var(--ink-3)');
-      $('#rename').hidden = !sitter;
+      $('#badgeFace').textContent = face(me());
+      $('#badgeText').textContent = me()?.display_name || (sitter ? '保母' : '主人');
+      $('#rename').hidden = !data.me;
       $('#switchUser').hidden = false;
       $('#tagline').textContent = sitter ? '登記你有空的時段' : '誰有空，一眼就知道';
       $('#guide').hidden = !sitter;
@@ -515,7 +531,7 @@
     function renderFilters() {
       if (isSitter()) return;
       const all = `<button class="filter" aria-pressed="${!filter}" data-filter="">全部</button>`;
-      $('#filters').innerHTML = all + data.profiles.map(p => `<button class="filter" style="--c:${colors[p.id][0]}" aria-pressed="${filter === p.id}" data-filter="${p.id}"><i></i>${esc(p.display_name)}</button>`).join('');
+      $('#filters').innerHTML = all + data.profiles.map(p => `<button class="filter" style="--c:${colors[p.id][0]}" aria-pressed="${filter === p.id}" data-filter="${p.id}">${p.avatar ? `<span class="emoji">${esc(p.avatar)}</span>` : '<i></i>'}${esc(p.display_name)}</button>`).join('');
     }
 
     function renderGrid() {
@@ -568,7 +584,7 @@
           const c = colors[s.caregiver_id]?.[0];
           return `<div class="track"><div class="bar" style="--c:${c};left:${left}%;width:${width}%">${sitter ? '' : esc(nameOf(s.caregiver_id))}</div></div>`;
         }).join('');
-        const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}"><span class="dot"></span><div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" data-slot="${s.id}">取消</button>` : ''}</li>`).join('');
+        const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}">${profileOf(s.caregiver_id)?.avatar ? `<span class="emoji">${esc(profileOf(s.caregiver_id).avatar)}</span>` : '<span class="dot"></span>'}<div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" data-slot="${s.id}">取消</button>` : ''}</li>`).join('');
         body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>`;
       }
       $('#detail').innerHTML = `<h2>${title}</h2><p class="sub">${sub}</p>${body}`;
@@ -663,12 +679,32 @@
     $('#startTime').onchange = $('#endTime').onchange = updateSubmitLabel;
     $('#cancelSheet').onclick = () => $('#slotDialog').close();
     $('#slotForm').addEventListener('submit', submitSlots);
-    $('#rename').onclick = () => { $('#nameInput').value = me()?.display_name || ''; $('#nameDialog').showModal(); };
+    let chosenFace = null;
+    const firstGrapheme = text => {
+      const t = text.trim(); if (!t) return null;
+      return window.Intl?.Segmenter ? [...new Intl.Segmenter().segment(t)][0].segment : [...t][0];
+    };
+    function paintFaces() {
+      const name = $('#nameInput').value.trim() || me()?.display_name || '?';
+      $('#facePreview').textContent = chosenFace || [...name][0].toUpperCase();
+      $('#facePreview').style.setProperty('--c', isSitter() ? colors[data.profile_id]?.[0] : '#5a5a5a');
+      $('#faces').innerHTML = `<button type="button" class="letter" data-face="" aria-pressed="${!chosenFace}" aria-label="用名字第一個字">${esc([...name][0].toUpperCase())}</button>` +
+        FACES.map(f => `<button type="button" data-face="${f}" aria-pressed="${chosenFace === f}">${f}</button>`).join('');
+    }
+    $('#rename').onclick = () => {
+      chosenFace = me()?.avatar || null;
+      $('#nameInput').value = me()?.display_name || '';
+      $('#faceInput').value = chosenFace && !FACES.includes(chosenFace) ? chosenFace : '';
+      paintFaces(); $('#nameDialog').showModal();
+    };
+    $('#faces').onclick = e => { const b = e.target.closest('[data-face]'); if (!b) return; chosenFace = b.dataset.face || null; $('#faceInput').value = ''; paintFaces(); };
+    $('#faceInput').oninput = e => { chosenFace = firstGrapheme(e.target.value); paintFaces(); };
+    $('#nameInput').oninput = () => { if (!chosenFace) paintFaces(); };
     $('#cancelName').onclick = () => $('#nameDialog').close();
     $('#nameForm').addEventListener('submit', async e => {
       e.preventDefault();
       const name = $('#nameInput').value.trim(); if (!name) return;
-      try { await api.rename(name); $('#nameDialog').close(); toast('名字已更新'); await load(); }
+      try { await api.updateProfile(name, chosenFace); $('#nameDialog').close(); toast('設定已更新'); await load(); }
       catch (err) { toast(`更新失敗：${err.message}`); }
     });
     $('#people').onclick = e => { const b = e.target.closest('[data-id]'); if (b) openPin(b); };

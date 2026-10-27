@@ -414,4 +414,88 @@ grant execute on function calendar_private.directory(), calendar_private.login(u
 
 insert into public.members(display_name, role)
 select '主人', 'owner' where not exists (select 1 from public.members where role = 'owner');
+
+-- ── 頭像（表情符號）與個人設定 ──
+alter table public.members add column if not exists avatar text;
+alter table public.members drop constraint if exists members_avatar_length;
+alter table public.members add constraint members_avatar_length
+  check (avatar is null or char_length(avatar) between 1 and 8);
+
+create or replace function calendar_private.directory()
+returns jsonb language sql stable security definer set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', m.id, 'display_name', m.display_name, 'role', m.role, 'avatar', m.avatar)
+    order by m.role desc, m.created_at, m.id), '[]'::jsonb)
+  from public.members m where m.pin_hash is not null;
+$$;
+
+-- 取代前面的版本：多回傳頭像，以及登入者自己（me）。
+create or replace function calendar_private.read_calendar(p_token text, p_start date, p_end date)
+returns jsonb language plpgsql stable security definer set search_path = ''
+as $$
+declare
+  access_record calendar_private.access_links;
+  profile_rows jsonb;
+  slot_rows jsonb;
+  me_row jsonb;
+begin
+  access_record := calendar_private.authorize_link(p_token);
+  if p_start is null or p_end is null or not pg_catalog.isfinite(p_start)
+    or not pg_catalog.isfinite(p_end) or p_end < p_start or p_end - p_start > 62 then
+    raise exception using errcode = '22023', message = '請選擇有效的月份。';
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id', m.id, 'display_name', m.display_name, 'avatar', m.avatar)
+    order by m.created_at, m.id), '[]'::jsonb)
+  into profile_rows from public.members m
+  where m.role = 'sitter' and (access_record.role = 'owner' or m.id = access_record.caregiver_id);
+  select jsonb_build_object('id', m.id, 'display_name', m.display_name, 'avatar', m.avatar, 'role', m.role)
+  into me_row from public.members m
+  where m.id = coalesce(access_record.member_id, access_record.caregiver_id);
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'id', s.id, 'caregiver_id', s.caregiver_id, 'available_on', s.available_on,
+      'starts_at', pg_catalog.to_char(s.starts_at, 'HH24:MI'),
+      'ends_at', pg_catalog.to_char(s.ends_at, 'HH24:MI'), 'note', s.note)
+    order by s.available_on, s.starts_at, s.caregiver_id), '[]'::jsonb)
+  into slot_rows from public.availability_slots s join public.members m on m.id = s.caregiver_id
+  where s.available_on between p_start and p_end and m.role = 'sitter'
+    and (access_record.role = 'owner' or s.caregiver_id = access_record.caregiver_id);
+  return jsonb_build_object('role', access_record.role, 'profile_id', access_record.caregiver_id,
+    'me', me_row, 'profiles', profile_rows, 'slots', slot_rows);
+end;
+$$;
+
+-- 改自己的名字和頭像（保母和主人都可以，但只能改登入的那個人）。
+create or replace function calendar_private.update_profile(p_token text, p_name text, p_avatar text)
+returns jsonb language plpgsql security definer set search_path = ''
+as $$
+declare
+  access_record calendar_private.access_links;
+  target uuid;
+  clean_avatar text := nullif(btrim(p_avatar), '');
+begin
+  access_record := calendar_private.authorize_link(p_token);
+  target := coalesce(access_record.member_id, access_record.caregiver_id);
+  if target is null then
+    raise exception using errcode = '42501', message = '這個登入方式不能修改個人設定，請用名字＋PIN 登入。';
+  end if;
+  if p_name is null or char_length(btrim(p_name)) not between 1 and 30 then
+    raise exception using errcode = '22023', message = '名字請填寫 1 到 30 個字。';
+  end if;
+  if clean_avatar is not null and (char_length(clean_avatar) > 8 or clean_avatar ~ '[<>&"''[:space:]]') then
+    raise exception using errcode = '22023', message = '頭像請選一個表情符號。';
+  end if;
+  perform pg_catalog.set_config('calendar.access_id', access_record.id::text, true);
+  update public.members set display_name = btrim(p_name), avatar = clean_avatar where id = target;
+  return jsonb_build_object('display_name', btrim(p_name), 'avatar', clean_avatar);
+end;
+$$;
+
+create or replace function public.calendar_update_profile(p_token text, p_name text, p_avatar text)
+returns jsonb language sql security invoker set search_path = ''
+as $$ select calendar_private.update_profile(p_token, p_name, p_avatar); $$;
+
+revoke all on function calendar_private.update_profile(text, text, text),
+  public.calendar_update_profile(text, text, text) from PUBLIC;
+grant execute on function calendar_private.update_profile(text, text, text),
+  public.calendar_update_profile(text, text, text) to anon, authenticated;
 commit;
