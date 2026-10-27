@@ -306,7 +306,7 @@
         </div>
         <div class="filters" id="filters" role="group" aria-label="篩選保母" hidden></div>
         <div class="guide" id="guide" hidden>
-          <span><b>點日期可多選</b>，再一次設定時段</span>
+          <span><b>點日期可多選</b>，一次登記 17:00–19:00</span>
           <span class="quick"><button id="pickWeekends">選本月週末</button></span>
         </div>
         <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
@@ -319,22 +319,8 @@
   <div class="action-bar" id="actionBar" hidden>
     <div class="count" id="pickCount"></div>
     <button class="clear" id="clearPicks">清除</button>
-    <button class="primary" id="openSheet">設定時段</button>
+    <button class="primary" id="openSheet">登記 17:00–19:00</button>
   </div>
-
-  <dialog id="slotDialog">
-    <form class="sheet" id="slotForm" method="dialog">
-      <h3>這幾天幾點有空？</h3>
-      <p class="sub" id="sheetDates"></p>
-      <div class="presets" id="presets" role="radiogroup" aria-label="時段"></div>
-      <div class="custom" id="custom" hidden>
-        <select id="startTime" aria-label="開始時間"></select><span>到</span><select id="endTime" aria-label="結束時間"></select>
-      </div>
-      <label class="field"><span>備註（選填）</span><input id="note" maxlength="60" placeholder="例如：可以幫忙洗澡、需提早說" /></label>
-      <div class="form-error" id="formError" role="alert"></div>
-      <div class="sheet-foot"><button class="secondary" type="button" id="cancelSheet">取消</button><button class="primary" type="submit" id="submitSlot">登記</button></div>
-    </form>
-  </dialog>
 
   <dialog id="nameDialog">
     <form class="sheet" id="nameForm">
@@ -391,13 +377,6 @@
     const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
     const shortTime = t => t.endsWith(':00') ? String(Number(t.slice(0, 2))) : t.replace(/^0/, '');
     const palette = [['#d9734e', '#fbebe3'], ['#4f8a5b', '#e7f2e8'], ['#4f78b0', '#e6eef8'], ['#a0629a', '#f4e8f3'], ['#c08a2d', '#f8efdc'], ['#3d918d', '#e2f2f1'], ['#7a6fb5', '#ecebf8'], ['#c25b6a', '#f8e6e9']];
-    const PRESETS = [
-      { id: 'morning', label: '上午', start: '08:00', end: '12:00' },
-      { id: 'afternoon', label: '下午', start: '13:00', end: '18:00' },
-      { id: 'evening', label: '晚上', start: '18:00', end: '22:00' },
-      { id: 'allday', label: '整天', start: '08:00', end: '22:00' },
-      { id: 'custom', label: '自訂', start: null, end: null },
-    ];
     const DAY_START = 6 * 60, DAY_END = 24 * 60;
 
     // ── 資料存取：正式版走 Supabase 函式；?demo=owner / ?demo=sitter 用假資料 ──
@@ -493,7 +472,6 @@
     let focusDay = key(now);
     let filter = null;
     const picked = new Set();
-    let preset = 'afternoon';
 
     const isSitter = () => data?.role === 'sitter';
     const todayKey = () => key(new Date());
@@ -670,7 +648,7 @@
       let sub, body;
       if (!list.length) {
         sub = sitter ? '你這天還沒登記時段' : (filter ? `${esc(nameOf(filter))}這天沒有空` : '這天還沒有人登記');
-        body = `<div class="empty"><svg><use href="#paw"/></svg>${sitter ? '在月曆上點選日期，再按「設定時段」。' : '可以換一天看看，或用上方篩選找特定保母。'}</div>`;
+        body = `<div class="empty"><svg><use href="#paw"/></svg>${sitter ? '在月曆上點選日期，再按「登記」。' : '可以換一天看看，或用上方篩選找特定保母。'}</div>`;
       } else {
         const people = new Set(list.map(s => s.caregiver_id)).size;
         sub = sitter ? `你登記了 ${list.length} 個時段` : `${people} 位保母有空`;
@@ -683,8 +661,7 @@
           return `<div class="track"><div class="bar" style="--c:${c};left:${left}%;width:${width}%">${sitter ? '' : esc(nameOf(s.caregiver_id))}</div></div>`;
         }).join('');
         const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}">${profileOf(s.caregiver_id)?.avatar ? `<span class="emoji">${esc(profileOf(s.caregiver_id).avatar)}</span>` : '<span class="dot"></span>'}<div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" type="button" data-slot="${s.id}">刪除</button>` : ''}</li>`).join('');
-        const more = sitter && focusDay >= todayKey() ? '<button class="add-more" type="button" id="addMore">＋ 這天再加一個時段</button>' : '';
-        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>${more}`;
+        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>`;
       }
       $('#detail').innerHTML = `<h2>${title}</h2><p class="sub">${sub}</p>${body}`;
     }
@@ -697,49 +674,17 @@
       $('#pickCount').innerHTML = `已選 ${n} 天<small>${esc(days.slice(0, 4).join('、'))}${n > 4 ? ' …' : ''}</small>`;
     }
 
-    // ── 時段面板 ──
-    const timeOptions = (() => { const out = []; for (let m = DAY_START; m <= DAY_END; m += 30) out.push(`${pad(Math.floor(m / 60))}:${pad(m % 60)}`); return out; })();
-    $('#startTime').innerHTML = timeOptions.slice(0, -1).map(t => `<option>${t}</option>`).join('');
-    $('#endTime').innerHTML = timeOptions.slice(1).map(t => `<option>${t}</option>`).join('');
-    $('#startTime').value = '09:00'; $('#endTime').value = '17:00';
-
-    function renderPresets() {
-      $('#presets').innerHTML = PRESETS.map(p => `<button type="button" class="preset" role="radio" aria-checked="${preset === p.id}" data-preset="${p.id}"><b>${p.label}</b><span>${p.start ? `${p.start} – ${p.end}` : '自己選時間'}</span></button>`).join('');
-      $('#custom').hidden = preset !== 'custom';
-    }
-
-    function chosenRange() {
-      if (preset === 'custom') return [$('#startTime').value, $('#endTime').value];
-      const p = PRESETS.find(x => x.id === preset); return [p.start, p.end];
-    }
-
-    function openSheet() {
-      const days = [...picked].sort();
-      $('#sheetDates').textContent = days.map(k => { const d = parseKey(k); return `${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）`; }).join('、');
-      $('#formError').textContent = '';
-      $('#note').value = '';
-      renderPresets(); updateSubmitLabel();
-      $('#slotDialog').showModal();
-    }
-
-    function updateSubmitLabel() {
-      const [s, e] = chosenRange();
-      $('#submitSlot').textContent = `登記 ${picked.size} 天 · ${s}–${e}`;
-    }
-
-    async function submitSlots(event) {
-      event.preventDefault();
-      const [start, end] = chosenRange();
-      if (toMin(end) <= toMin(start)) { $('#formError').textContent = '結束時間要晚於開始時間。'; return; }
-      const btn = $('#submitSlot'); btn.disabled = true;
+    // ── 登記：固定 17:00–19:00（特殊狀況主人會另外問） ──
+    const SLOT_START = '17:00', SLOT_END = '19:00';
+    async function registerPicked() {
+      const btn = $('#openSheet'); btn.disabled = true;
       try {
-        const count = await api.addSlots([...picked].sort(), start, end, $('#note').value.trim());
-        $('#slotDialog').close();
+        const count = await api.addSlots([...picked].sort(), SLOT_START, SLOT_END, null);
         picked.clear();
-        toast(`已登記 ${count} 天 ${start}–${end}`);
+        toast(`已登記 ${count} 天 ${SLOT_START}–${SLOT_END}`);
         await load();
       } catch (err) {
-        $('#formError').textContent = err.message;
+        toast(err.message);
       } finally {
         btn.disabled = false;
       }
@@ -866,15 +811,10 @@
     $('#filters').onclick = e => { const b = e.target.closest('[data-filter]'); if (!b) return; filter = b.dataset.filter || null; render(); };
     $('#detail').onclick = e => {
       const b = e.target.closest('[data-slot]'); if (b) return cancelSlot(b);
-      if (e.target.closest('#addMore')) { picked.clear(); picked.add(focusDay); render(); openSheet(); }
     };
     $('#pickWeekends').onclick = pickWeekends;
     $('#clearPicks').onclick = () => { picked.clear(); render(); };
-    $('#openSheet').onclick = openSheet;
-    $('#presets').onclick = e => { const b = e.target.closest('[data-preset]'); if (!b) return; preset = b.dataset.preset; renderPresets(); updateSubmitLabel(); };
-    $('#startTime').onchange = $('#endTime').onchange = updateSubmitLabel;
-    $('#cancelSheet').onclick = () => $('#slotDialog').close();
-    $('#slotForm').addEventListener('submit', submitSlots);
+    $('#openSheet').onclick = registerPicked;
     let chosenFace = null;
     const firstGrapheme = text => {
       const t = text.trim(); if (!t) return null;
@@ -917,7 +857,7 @@
     document.addEventListener('click', e => { if (!e.target.closest('#who')) closeMenu(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden && data) load(); });
-    setInterval(() => { if (!document.hidden && data && !$('#slotDialog').open) load(); }, 60000);
+    setInterval(() => { if (!document.hidden && data && !document.querySelector('dialog[open]')) load(); }, 60000);
 
     async function start() {
       if (demoRole) { api = createDemoApi(demoRole); return load(); }
