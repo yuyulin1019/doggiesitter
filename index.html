@@ -269,6 +269,7 @@
         </button>
         <div class="menu" id="meMenu" role="menu" hidden>
           <button type="button" role="menuitem" id="rename" hidden>個人設定</button>
+          <button type="button" role="menuitem" id="changePin" hidden>更改 PIN</button>
           <button type="button" role="menuitem" id="manageMembers" hidden>管理成員</button>
           <button type="button" role="menuitem" id="switchUser" hidden>換人</button>
         </div>
@@ -344,6 +345,18 @@
       <label class="field"><span>或用手機鍵盤輸入任何表情符號</span><input id="faceInput" maxlength="8" placeholder="點這裡，切換到表情符號鍵盤" autocomplete="off" /></label>
       <label class="field"><span>名字</span><input id="nameInput" required maxlength="30" /></label>
       <div class="sheet-foot"><button class="secondary" type="button" id="cancelName">取消</button><button class="primary" type="submit">儲存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="pinDialog">
+    <form class="sheet" id="pinForm">
+      <h3>更改 PIN</h3>
+      <p class="sub">改好之後，這台裝置會繼續登入，其他手機或電腦上的登入會自動登出。</p>
+      <label class="field"><span>舊的 PIN</span><input id="oldPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required autocomplete="current-password" /></label>
+      <label class="field"><span>新的 PIN（4 位數字）</span><input id="myNewPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required autocomplete="new-password" /></label>
+      <label class="field"><span>再輸入一次新的 PIN</span><input id="myNewPin2" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required autocomplete="new-password" /></label>
+      <div class="form-error" id="pinFormError" role="alert"></div>
+      <div class="sheet-foot"><button class="secondary" type="button" id="cancelPin">取消</button><button class="primary" type="submit" id="savePin">更改</button></div>
     </form>
   </dialog>
 
@@ -424,6 +437,11 @@
         addSlots: (dates, start, end, note) => call('calendar_add_slots', { p_dates: dates, p_start_time: start, p_end_time: end, p_note: note || null }),
         removeSlot: id => call('calendar_remove_slot', { p_slot_id: id }),
         updateProfile: (name, avatar) => call('calendar_update_profile', { p_name: name, p_avatar: avatar || null }),
+        changeMyPin: async (oldPin, newPin) => {
+          const data = await call('calendar_change_my_pin', { p_old_pin: oldPin, p_new_pin: newPin });
+          if (data.error) throw new Error(data.error);
+          return data.token;
+        },
         listMembers: () => call('calendar_list_members', {}),
         addMember: (name, pin) => call('calendar_add_member', { p_name: name, p_pin: pin }),
         setMemberPin: (id, pin) => call('calendar_set_member_pin', { p_member_id: id, p_pin: pin }),
@@ -452,6 +470,7 @@
         directory: async () => [...sitters.filter(s => s.has_pin !== false).map(s => ({ ...s, role: 'sitter' })), owner],
         login: async () => 'demo',
         logout: async () => true,
+        changeMyPin: async (oldPin, newPin) => { if (oldPin === newPin) throw new Error('新的 PIN 和舊的一樣，請換一組。'); return 'demo'; },
         listMembers: async () => [...sitters.map(s => ({ ...s, role: 'sitter', has_pin: s.has_pin !== false, is_me: s.id === me })), { ...owner, has_pin: true, is_me: !me }],
         addMember: async (name, pin) => {
           if ([...sitters, owner].some(s => s.display_name === name.trim())) throw new Error('已經有叫這個名字的人了，請換一個名字。');
@@ -585,6 +604,7 @@
       $('#badgeText').textContent = me()?.display_name || (sitter ? '保母' : '主人');
       $('#rename').hidden = !data.me;
       $('#manageMembers').hidden = sitter || !data.me;
+      $('#changePin').hidden = !data.me;
       $('#switchUser').hidden = false;
       $('#guide').hidden = !sitter;
       $('#filters').hidden = sitter || data.profiles.length < 2;
@@ -817,6 +837,26 @@
       } catch (err) { $('#memberError').textContent = err.message; }
     });
     $('#manageMembers').onclick = openMembers;
+    $('#changePin').onclick = () => {
+      ['#oldPin', '#myNewPin', '#myNewPin2'].forEach(id => { $(id).value = ''; });
+      $('#pinFormError').textContent = '';
+      $('#pinDialog').showModal(); $('#oldPin').focus();
+    };
+    $('#cancelPin').onclick = () => $('#pinDialog').close();
+    $('#pinForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const oldPin = $('#oldPin').value.trim(), newPin = $('#myNewPin').value.trim(), again = $('#myNewPin2').value.trim();
+      const err = msg => { $('#pinFormError').textContent = msg; };
+      if (![oldPin, newPin, again].every(v => /^\d{4}$/.test(v))) return err('PIN 都要是 4 位數字。');
+      if (newPin !== again) return err('兩次輸入的新 PIN 不一樣，請再確認一次。');
+      $('#savePin').disabled = true;
+      try {
+        token = await api.changeMyPin(oldPin, newPin);
+        safeSet(TOKEN_KEY, token);
+        $('#pinDialog').close(); toast('PIN 已更新');
+      } catch (ex) { err(ex.message); }
+      finally { $('#savePin').disabled = false; }
+    });
     $('#closeMembers').onclick = () => $('#membersDialog').close();
 
     // ── 事件 ──
