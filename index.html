@@ -49,6 +49,26 @@
     .menu { position: absolute; right: 0; top: 46px; z-index: 15; min-width: 150px; padding: 6px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px #0000001a; }
     .menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; font-size: 14px; }
     .menu button:hover { background: var(--line-2); }
+    #membersDialog .sheet { max-height: 88vh; overflow-y: auto; }
+    .member-list { list-style: none; margin: 0 0 20px; padding: 0; }
+    .member { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line-2); }
+    .member .meta { flex: 1; min-width: 0; }
+    .member .name { font-size: 15px; font-weight: 600; }
+    .member .name small { color: var(--ink-3); font-weight: 500; }
+    .member .status { font-size: 12px; color: var(--ink-2); }
+    .member .status.warn { color: #b26b00; }
+    .mini { height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; }
+    .mini:hover { border-color: var(--ink-3); }
+    .mini.danger { color: var(--danger); }
+    .mini.danger.armed { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .mini.solid { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .pin-edit { display: flex; gap: 6px; width: 100%; padding-left: 42px; }
+    .pin-edit input { flex: 1; min-width: 0; height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-size: 15px; }
+    .add-member h4 { margin: 0 0 8px; font-size: 14px; }
+    .add-member .row { display: flex; gap: 6px; }
+    .add-member input { flex: 1; min-width: 0; height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font-size: 15px; }
+    .add-member #newPin { flex: 0 0 104px; }
+    .add-member .primary { flex: none; }
     .faces { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 14px; }
     .faces button { aspect-ratio: 1; border: 0; border-radius: 10px; background: transparent; font-size: 24px; line-height: 1; padding: 0; }
     .faces button:hover { background: var(--line-2); }
@@ -249,6 +269,7 @@
         </button>
         <div class="menu" id="meMenu" role="menu" hidden>
           <button type="button" role="menuitem" id="rename" hidden>個人設定</button>
+          <button type="button" role="menuitem" id="manageMembers" hidden>管理成員</button>
           <button type="button" role="menuitem" id="switchUser" hidden>換人</button>
         </div>
       </div>
@@ -326,6 +347,24 @@
     </form>
   </dialog>
 
+  <dialog id="membersDialog">
+    <div class="sheet">
+      <h3>管理成員</h3>
+      <p class="sub">新增保母、幫大家設定 PIN。設好之後記得把 PIN 告訴對方。</p>
+      <ul class="member-list" id="memberList"></ul>
+      <form class="add-member" id="addMemberForm">
+        <h4>新增保母</h4>
+        <div class="row">
+          <input id="newName" placeholder="名字" maxlength="30" required autocomplete="off" />
+          <input id="newPin" placeholder="4 位數 PIN" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required autocomplete="off" />
+          <button class="primary" type="submit">新增</button>
+        </div>
+      </form>
+      <div class="form-error" id="memberError" role="alert"></div>
+      <div class="sheet-foot"><button class="secondary" type="button" id="closeMembers" style="flex:1">完成</button></div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status"></div>
 
   <script src="./supabase-config.js"></script>
@@ -385,11 +424,15 @@
         addSlots: (dates, start, end, note) => call('calendar_add_slots', { p_dates: dates, p_start_time: start, p_end_time: end, p_note: note || null }),
         removeSlot: id => call('calendar_remove_slot', { p_slot_id: id }),
         updateProfile: (name, avatar) => call('calendar_update_profile', { p_name: name, p_avatar: avatar || null }),
+        listMembers: () => call('calendar_list_members', {}),
+        addMember: (name, pin) => call('calendar_add_member', { p_name: name, p_pin: pin }),
+        setMemberPin: (id, pin) => call('calendar_set_member_pin', { p_member_id: id, p_pin: pin }),
+        removeMember: id => call('calendar_remove_member', { p_member_id: id }),
       };
     }
 
     function createDemoApi(role) {
-      const sitters = [{ id: 's1', display_name: '佑宥', avatar: '🐶' }, { id: 's2', display_name: '楚涵', avatar: '🐱' }, { id: 's3', display_name: '小米', avatar: null }];
+      const sitters = [{ id: 's1', display_name: '佑宥', avatar: '🐶' }, { id: 's2', display_name: '楚涵', avatar: '🐱' }, { id: 's3', display_name: '小米', avatar: null, has_pin: false }];
       const owner = { id: 'o1', display_name: 'Carol', avatar: null, role: 'owner' };
       const me = role === 'sitter' ? 's1' : null;
       const meRow = () => me ? { ...sitters[0], role: 'sitter' } : owner;
@@ -406,6 +449,20 @@
           return dates.length;
         },
         removeSlot: async id => { const i = slots.findIndex(s => s.id === id && s.caregiver_id === me); if (i < 0) throw new Error('找不到這個時段，或它不是你登記的。'); slots.splice(i, 1); return true; },
+        directory: async () => [...sitters.filter(s => s.has_pin !== false).map(s => ({ ...s, role: 'sitter' })), owner],
+        login: async () => 'demo',
+        logout: async () => true,
+        listMembers: async () => [...sitters.map(s => ({ ...s, role: 'sitter', has_pin: s.has_pin !== false, is_me: s.id === me })), { ...owner, has_pin: true, is_me: !me }],
+        addMember: async (name, pin) => {
+          if ([...sitters, owner].some(s => s.display_name === name.trim())) throw new Error('已經有叫這個名字的人了，請換一個名字。');
+          sitters.push({ id: `s${Date.now()}`, display_name: name.trim(), avatar: null }); return true;
+        },
+        setMemberPin: async id => { const s = sitters.find(x => x.id === id); if (s) s.has_pin = true; return true; },
+        removeMember: async id => {
+          const i = sitters.findIndex(s => s.id === id); if (i < 0) throw new Error('只能移除保母。'); sitters.splice(i, 1);
+          for (let j = slots.length - 1; j >= 0; j--) if (slots[j].caregiver_id === id) slots.splice(j, 1);
+          return true;
+        },
         updateProfile: async (name, avatar) => { Object.assign(me ? sitters[0] : owner, { display_name: name, avatar: avatar || null }); return true; },
       };
     }
@@ -527,6 +584,7 @@
       $('#badgeFace').style.setProperty('--c', sitter ? colors[data.profile_id]?.[0] : '#5a5a5a');
       $('#badgeText').textContent = me()?.display_name || (sitter ? '保母' : '主人');
       $('#rename').hidden = !data.me;
+      $('#manageMembers').hidden = sitter || !data.me;
       $('#switchUser').hidden = false;
       $('#guide').hidden = !sitter;
       $('#filters').hidden = sitter || data.profiles.length < 2;
@@ -691,6 +749,75 @@
       focusDay = cursor.getFullYear() === t.getFullYear() && cursor.getMonth() === t.getMonth() ? key(t) : key(cursor);
       load();
     }
+
+    // ── 主人：管理成員 ──
+    let members = [], editingPin = null;
+    async function openMembers() {
+      editingPin = null; $('#memberError').textContent = ''; $('#memberList').innerHTML = '';
+      $('#membersDialog').showModal();
+      await loadMembers();
+    }
+    async function loadMembers() {
+      try { members = await api.listMembers(); renderMembers(); }
+      catch (err) { $('#memberError').textContent = err.message; }
+    }
+    function renderMembers() {
+      let sitterIndex = 0;
+      $('#memberList').innerHTML = members.map(m => {
+        const c = m.role === 'sitter' ? palette[sitterIndex++ % palette.length][0] : '#5a5a5a';
+        const status = m.role === 'owner' ? '主人' : (m.has_pin ? '已設定 PIN' : '還沒設定 PIN，登入畫面還看不到');
+        const editing = editingPin === m.id;
+        const actions = editing ? '' : `<button class="mini" type="button" data-act="pin" data-id="${m.id}">${m.has_pin ? '改 PIN' : '設定 PIN'}</button>` +
+          (m.role === 'sitter' ? `<button class="mini danger" type="button" data-act="remove" data-id="${m.id}">移除</button>` : '');
+        const form = editing ? `<form class="pin-edit" data-id="${m.id}"><input name="pin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="新的 4 位數 PIN" required autocomplete="off" /><button class="mini solid" type="submit">儲存</button><button class="mini" type="button" data-act="cancel">取消</button></form>` : '';
+        return `<li class="member"><span class="me-face" style="--c:${c}">${esc(face(m))}</span><div class="meta"><div class="name">${esc(m.display_name)}${m.is_me ? ' <small>（你）</small>' : ''}</div><div class="status${m.has_pin ? '' : ' warn'}">${status}</div></div>${actions}${form}</li>`;
+      }).join('');
+      $('#memberList .pin-edit input')?.focus();
+    }
+    async function removeMember(btn) {
+      const m = members.find(x => x.id === btn.dataset.id);
+      if (!btn.classList.contains('armed')) {
+        btn.classList.add('armed'); btn.textContent = '確定移除？';
+        setTimeout(() => { if (btn.isConnected && !btn.disabled) { btn.classList.remove('armed'); btn.textContent = '移除'; } }, 4000);
+        return;
+      }
+      btn.disabled = true;
+      try { await api.removeMember(m.id); toast(`已移除 ${m.display_name}`); await loadMembers(); load(); }
+      catch (err) { $('#memberError').textContent = err.message; btn.disabled = false; }
+    }
+    $('#memberList').addEventListener('click', e => {
+      const b = e.target.closest('[data-act]'); if (!b) return;
+      $('#memberError').textContent = '';
+      if (b.dataset.act === 'pin') { editingPin = b.dataset.id; renderMembers(); }
+      else if (b.dataset.act === 'cancel') { editingPin = null; renderMembers(); }
+      else if (b.dataset.act === 'remove') removeMember(b);
+    });
+    $('#memberList').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = e.target.dataset.id, pin = e.target.pin.value.trim(), m = members.find(x => x.id === id);
+      if (!/^\d{4}$/.test(pin)) { $('#memberError').textContent = 'PIN 必須是 4 位數字。'; return; }
+      try {
+        await api.setMemberPin(id, pin);
+        if (m.is_me) {
+          $('#membersDialog').close(); token = null; safeSet(TOKEN_KEY, null);
+          toast('PIN 已更新，請用新的 PIN 重新登入'); showGate(); return;
+        }
+        toast(`已設定 ${m.display_name} 的 PIN`); editingPin = null; await loadMembers();
+      } catch (err) { $('#memberError').textContent = err.message; }
+    });
+    $('#addMemberForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = $('#newName').value.trim(), pin = $('#newPin').value.trim();
+      if (!name) return;
+      if (!/^\d{4}$/.test(pin)) { $('#memberError').textContent = 'PIN 必須是 4 位數字。'; return; }
+      try {
+        await api.addMember(name, pin);
+        $('#newName').value = ''; $('#newPin').value = ''; $('#memberError').textContent = '';
+        toast(`已新增 ${name}，記得把 PIN 告訴對方`); await loadMembers(); load();
+      } catch (err) { $('#memberError').textContent = err.message; }
+    });
+    $('#manageMembers').onclick = openMembers;
+    $('#closeMembers').onclick = () => $('#membersDialog').close();
 
     // ── 事件 ──
     $('#prev').onclick = () => moveMonth(-1);

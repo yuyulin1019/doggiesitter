@@ -498,4 +498,106 @@ revoke all on function calendar_private.update_profile(text, text, text),
   public.calendar_update_profile(text, text, text) from PUBLIC;
 grant execute on function calendar_private.update_profile(text, text, text),
   public.calendar_update_profile(text, text, text) to anon, authenticated;
+
+-- ── 主人管理成員：新增保母、設定／重設 PIN、移除保母 ──
+create or replace function calendar_private.require_owner(p_token text)
+returns calendar_private.access_links
+language plpgsql stable security invoker set search_path = ''
+as $$
+declare access_record calendar_private.access_links;
+begin
+  access_record := calendar_private.authorize_link(p_token);
+  if access_record.role <> 'owner' then
+    raise exception using errcode = '42501', message = '只有主人可以管理成員。';
+  end if;
+  return access_record;
+end;
+$$;
+revoke all on function calendar_private.require_owner(text) from PUBLIC, anon, authenticated;
+
+create or replace function calendar_private.list_members(p_token text)
+returns jsonb language plpgsql stable security definer set search_path = ''
+as $$
+declare access_record calendar_private.access_links;
+begin
+  access_record := calendar_private.require_owner(p_token);
+  return (select coalesce(jsonb_agg(jsonb_build_object(
+      'id', m.id, 'display_name', m.display_name, 'role', m.role, 'avatar', m.avatar,
+      'has_pin', m.pin_hash is not null, 'is_me', m.id = access_record.member_id)
+    order by m.role desc, m.created_at, m.id), '[]'::jsonb) from public.members m);
+end;
+$$;
+
+create or replace function calendar_private.add_member(p_token text, p_name text, p_pin text)
+returns uuid language plpgsql security definer set search_path = ''
+as $$
+declare new_id uuid;
+begin
+  perform calendar_private.require_owner(p_token);
+  if p_name is null or char_length(btrim(p_name)) not between 1 and 30 then
+    raise exception using errcode = '22023', message = '名字請填寫 1 到 30 個字。';
+  end if;
+  if p_pin is null or p_pin !~ '^[0-9]{4}$' then
+    raise exception using errcode = '22023', message = 'PIN 必須是 4 位數字。';
+  end if;
+  if exists (select 1 from public.members m where lower(btrim(m.display_name)) = lower(btrim(p_name))) then
+    raise exception using errcode = '23505', message = '已經有叫這個名字的人了，請換一個名字。';
+  end if;
+  insert into public.members(display_name, role) values (btrim(p_name), 'sitter') returning id into new_id;
+  perform calendar_private.set_pin(new_id, p_pin);
+  return new_id;
+end;
+$$;
+
+-- 重設 PIN 會讓那個人所有裝置登出（包含主人改自己的 PIN）。
+create or replace function calendar_private.set_member_pin(p_token text, p_member_id uuid, p_pin text)
+returns boolean language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform calendar_private.require_owner(p_token);
+  if not exists (select 1 from public.members where id = p_member_id) then
+    raise exception using errcode = '22023', message = '找不到這個成員。';
+  end if;
+  perform calendar_private.set_pin(p_member_id, p_pin);
+  return true;
+end;
+$$;
+
+-- 只能移除保母（主人不能把自己刪掉）；他登記的時段會一起刪除。
+create or replace function calendar_private.remove_member(p_token text, p_member_id uuid)
+returns boolean language plpgsql security definer set search_path = ''
+as $$
+declare access_record calendar_private.access_links;
+begin
+  access_record := calendar_private.require_owner(p_token);
+  perform pg_catalog.set_config('calendar.access_id', access_record.id::text, true);
+  delete from public.members where id = p_member_id and role = 'sitter';
+  if not found then
+    raise exception using errcode = '22023', message = '只能移除保母。';
+  end if;
+  return true;
+end;
+$$;
+
+create or replace function public.calendar_list_members(p_token text)
+returns jsonb language sql stable security invoker set search_path = ''
+as $$ select calendar_private.list_members(p_token); $$;
+create or replace function public.calendar_add_member(p_token text, p_name text, p_pin text)
+returns uuid language sql security invoker set search_path = ''
+as $$ select calendar_private.add_member(p_token, p_name, p_pin); $$;
+create or replace function public.calendar_set_member_pin(p_token text, p_member_id uuid, p_pin text)
+returns boolean language sql security invoker set search_path = ''
+as $$ select calendar_private.set_member_pin(p_token, p_member_id, p_pin); $$;
+create or replace function public.calendar_remove_member(p_token text, p_member_id uuid)
+returns boolean language sql security invoker set search_path = ''
+as $$ select calendar_private.remove_member(p_token, p_member_id); $$;
+
+revoke all on function calendar_private.list_members(text), calendar_private.add_member(text, text, text),
+  calendar_private.set_member_pin(text, uuid, text), calendar_private.remove_member(text, uuid),
+  public.calendar_list_members(text), public.calendar_add_member(text, text, text),
+  public.calendar_set_member_pin(text, uuid, text), public.calendar_remove_member(text, uuid) from PUBLIC;
+grant execute on function calendar_private.list_members(text), calendar_private.add_member(text, text, text),
+  calendar_private.set_member_pin(text, uuid, text), calendar_private.remove_member(text, uuid),
+  public.calendar_list_members(text), public.calendar_add_member(text, text, text),
+  public.calendar_set_member_pin(text, uuid, text), public.calendar_remove_member(text, uuid) to anon, authenticated;
 commit;
