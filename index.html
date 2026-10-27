@@ -171,7 +171,15 @@
     }
     .action-bar .count { font-size: 14px; font-weight: 600; }
     .action-bar .count small { display: block; font-size: 11.5px; font-weight: 500; color: #bdbdbd; }
-    .action-bar .clear { margin-left: auto; border: 0; background: transparent; color: #bdbdbd; font-size: 13px; padding: 8px; }
+    .action-bar { flex-wrap: wrap; padding: 12px 12px 12px 18px; row-gap: 10px; }
+    .action-bar .count { flex: 1; min-width: 0; }
+    .slot-btns { display: flex; gap: 8px; width: 100%; margin-left: -6px; }
+    .slot-btn { flex: 1; height: 52px; border: 0; border-radius: 12px; background: #fff; color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.25; }
+    .slot-btn:hover { background: #ececec; }
+    .slot-btn:disabled { opacity: .6; }
+    .slot-btn b { font-size: 15px; }
+    .slot-btn small { font-size: 11px; font-weight: 500; opacity: .75; font-variant-numeric: tabular-nums; }
+    .action-bar .clear { white-space: nowrap; margin-left: auto; border: 0; background: transparent; color: #bdbdbd; font-size: 13px; padding: 8px; }
     .primary { height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; }
     .primary:hover { background: #333; }
     .primary:disabled { opacity: .5; cursor: default; }
@@ -306,7 +314,7 @@
         </div>
         <div class="filters" id="filters" role="group" aria-label="篩選保母" hidden></div>
         <div class="guide" id="guide" hidden>
-          <span><b>點日期可多選</b>，一次登記 17:00–19:00</span>
+          <span><b>點日期可多選</b>，再選中午或晚上</span>
           <span class="quick"><button id="pickWeekends">選本月週末</button></span>
         </div>
         <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
@@ -319,7 +327,10 @@
   <div class="action-bar" id="actionBar" hidden>
     <div class="count" id="pickCount"></div>
     <button class="clear" id="clearPicks">清除</button>
-    <button class="primary" id="openSheet">登記 17:00–19:00</button>
+    <div class="slot-btns">
+      <button class="slot-btn" type="button" data-kind="noon"><b>登記中午</b><small>11:30–13:30</small></button>
+      <button class="slot-btn" type="button" data-kind="evening"><b>登記晚上</b><small>17:00–19:00</small></button>
+    </div>
   </div>
 
   <dialog id="nameDialog">
@@ -660,8 +671,12 @@
           const c = colors[s.caregiver_id]?.[0];
           return `<div class="track"><div class="bar" style="--c:${c};left:${left}%;width:${width}%">${sitter ? '' : esc(nameOf(s.caregiver_id))}</div></div>`;
         }).join('');
+        // 這天只登記了其中一個時段時，讓保母直接補登另一個。
+        const addButtons = sitter && focusDay >= todayKey() ? Object.entries(SLOTS)
+          .filter(([, slot]) => !list.some(s => s.starts_at === slot.start))
+          .map(([kind, slot]) => `<button class="add-more" type="button" data-add="${kind}">＋ 也登記${slot.label} ${slot.start}–${slot.end}</button>`).join('') : '';
         const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}">${profileOf(s.caregiver_id)?.avatar ? `<span class="emoji">${esc(profileOf(s.caregiver_id).avatar)}</span>` : '<span class="dot"></span>'}<div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" type="button" data-slot="${s.id}">刪除</button>` : ''}</li>`).join('');
-        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>`;
+        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>${addButtons}`;
       }
       $('#detail').innerHTML = `<h2>${title}</h2><p class="sub">${sub}</p>${body}`;
     }
@@ -674,19 +689,22 @@
       $('#pickCount').innerHTML = `已選 ${n} 天<small>${esc(days.slice(0, 4).join('、'))}${n > 4 ? ' …' : ''}</small>`;
     }
 
-    // ── 登記：固定 17:00–19:00（特殊狀況主人會另外問） ──
-    const SLOT_START = '17:00', SLOT_END = '19:00';
-    async function registerPicked() {
-      const btn = $('#openSheet'); btn.disabled = true;
+    // ── 登記：只有中午、晚上兩個固定時段（特殊狀況主人會另外問） ──
+    const SLOTS = { noon: { label: '中午', start: '11:30', end: '13:30' }, evening: { label: '晚上', start: '17:00', end: '19:00' } };
+    async function registerSlot(kind, days) {
+      const slot = SLOTS[kind], fromPicked = !days;
+      days = days || [...picked].sort();
+      if (!days.length) return;
+      document.querySelectorAll('.slot-btn, [data-add]').forEach(b => { b.disabled = true; });
       try {
-        const count = await api.addSlots([...picked].sort(), SLOT_START, SLOT_END, null);
-        picked.clear();
-        toast(`已登記 ${count} 天 ${SLOT_START}–${SLOT_END}`);
+        const count = await api.addSlots(days, slot.start, slot.end, null);
+        if (fromPicked) picked.clear();
+        toast(`已登記 ${count} 天${slot.label} ${slot.start}–${slot.end}`);
         await load();
       } catch (err) {
         toast(err.message);
       } finally {
-        btn.disabled = false;
+        document.querySelectorAll('.slot-btn, [data-add]').forEach(b => { b.disabled = false; });
       }
     }
 
@@ -811,10 +829,11 @@
     $('#filters').onclick = e => { const b = e.target.closest('[data-filter]'); if (!b) return; filter = b.dataset.filter || null; render(); };
     $('#detail').onclick = e => {
       const b = e.target.closest('[data-slot]'); if (b) return cancelSlot(b);
+      const add = e.target.closest('[data-add]'); if (add) return registerSlot(add.dataset.add, [focusDay]);
     };
     $('#pickWeekends').onclick = pickWeekends;
     $('#clearPicks').onclick = () => { picked.clear(); render(); };
-    $('#openSheet').onclick = registerPicked;
+    $('#actionBar').onclick = e => { const b = e.target.closest('.slot-btn'); if (b) registerSlot(b.dataset.kind); };
     let chosenFace = null;
     const firstGrapheme = text => {
       const t = text.trim(); if (!t) return null;
