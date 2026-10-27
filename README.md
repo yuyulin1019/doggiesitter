@@ -20,7 +20,7 @@
    ```
 
    Use `sitter` for sitters. Only add people who should access this calendar. The browser app cannot grant access or change account roles.
-4. Add the local and deployed URLs to Authentication → URL Configuration → Redirect URLs. For local use, allow `http://localhost:8000/**`; for GitHub Pages, allow `https://GITHUB_USERNAME.github.io/REPOSITORY_NAME/**`.
+4. Add the local and deployed URLs to Authentication → URL Configuration → Redirect URLs. For local use, allow `http://localhost:8000/**`; for GitHub Pages, allow `https://yuyulin1019.github.io/doggiesitter/**`.
 5. The project URL and publishable key are in `supabase-config.js`. The publishable key is safe in a browser app when RLS is enabled. Never add a secret or service-role key.
 
 ## Run locally
