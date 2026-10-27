@@ -137,6 +137,9 @@
     .slot .note { font-size: 12px; color: var(--ink-3); }
     .slot .cancel { border: 0; background: transparent; color: var(--danger); font-size: 13px; font-weight: 600; padding: 6px 8px; border-radius: 8px; }
     .slot .cancel:hover { background: #fbeae8; }
+    .slot .cancel.armed { background: var(--danger); color: #fff; }
+    .add-more { margin-top: 12px; width: 100%; height: 40px; border: 1px dashed var(--line); border-radius: 10px; background: transparent; color: var(--ink-2); font-size: 13px; font-weight: 600; }
+    .add-more:hover { border-color: var(--ink-3); color: var(--ink); }
     .empty { text-align: center; padding: 20px 8px 8px; color: var(--ink-2); font-size: 13px; }
     .empty svg { display: none; }
 
@@ -239,7 +242,6 @@
 
   <main class="app">
     <header class="topbar">
-      <div class="brand"><h1>保母時間</h1><p id="tagline" hidden></p></div>
       <div class="who" id="who" hidden>
         <button class="me-btn" id="meBtn" type="button" aria-haspopup="menu" aria-expanded="false">
           <span class="me-face" id="badgeFace"></span><span class="me-name" id="badgeText"></span>
@@ -253,7 +255,6 @@
     </header>
 
     <section class="gate" id="gate" hidden>
-      <div class="gate-brand">保母時間</div>
       <div id="pickStep">
         <h2>誰要使用？</h2>
         <p class="hint" id="gateText" hidden></p>
@@ -527,7 +528,6 @@
       $('#badgeText').textContent = me()?.display_name || (sitter ? '保母' : '主人');
       $('#rename').hidden = !data.me;
       $('#switchUser').hidden = false;
-      $('#tagline').textContent = sitter ? '登記你有空的時段' : '誰有空，一眼就知道';
       $('#guide').hidden = !sitter;
       $('#filters').hidden = sitter || data.profiles.length < 2;
     }
@@ -573,9 +573,12 @@
 
     function onDayClick(k, past) {
       focusDay = k;
-      if (isSitter() && !past) picked.has(k) ? picked.delete(k) : picked.add(k);
-      else if (isSitter() && past && !slotsOn(k).length) toast('過去的日期不能登記');
+      const mine = isSitter() && slotsOn(k).length > 0;
+      // 已登記的日子點下去是「看／刪除」，不是再選一次；要加時段用詳情卡裡的按鈕。
+      if (isSitter() && !past && !mine) picked.has(k) ? picked.delete(k) : picked.add(k);
+      else if (isSitter() && past && !mine) toast('過去的日期不能登記');
       render();
+      if (mine && matchMedia('(max-width: 860px)').matches) $('#detail').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function renderDetail() {
@@ -601,8 +604,9 @@
           const c = colors[s.caregiver_id]?.[0];
           return `<div class="track"><div class="bar" style="--c:${c};left:${left}%;width:${width}%">${sitter ? '' : esc(nameOf(s.caregiver_id))}</div></div>`;
         }).join('');
-        const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}">${profileOf(s.caregiver_id)?.avatar ? `<span class="emoji">${esc(profileOf(s.caregiver_id).avatar)}</span>` : '<span class="dot"></span>'}<div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" data-slot="${s.id}">取消</button>` : ''}</li>`).join('');
-        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>`;
+        const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}">${profileOf(s.caregiver_id)?.avatar ? `<span class="emoji">${esc(profileOf(s.caregiver_id).avatar)}</span>` : '<span class="dot"></span>'}<div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" type="button" data-slot="${s.id}">刪除</button>` : ''}</li>`).join('');
+        const more = sitter && focusDay >= todayKey() ? '<button class="add-more" type="button" id="addMore">＋ 這天再加一個時段</button>' : '';
+        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>${more}`;
       }
       $('#detail').innerHTML = `<h2>${title}</h2><p class="sub">${sub}</p>${body}`;
     }
@@ -663,11 +667,16 @@
       }
     }
 
-    async function cancelSlot(id) {
-      const s = data.slots.find(x => x.id === id);
-      if (!s || !confirm(`取消 ${s.available_on.slice(5).replace('-', '/')} ${s.starts_at}–${s.ends_at} 這個時段？`)) return;
-      try { await api.removeSlot(id); toast('已取消這個時段'); await load(); }
-      catch (err) { toast(`取消失敗：${err.message}`); }
+    // 不用瀏覽器的 confirm()：LINE 等 App 內建瀏覽器會擋掉它，按了就沒反應。改成按兩下確認。
+    async function cancelSlot(btn) {
+      if (!btn.classList.contains('armed')) {
+        btn.classList.add('armed'); btn.textContent = '確定刪除？';
+        setTimeout(() => { if (btn.isConnected && !btn.disabled) { btn.classList.remove('armed'); btn.textContent = '刪除'; } }, 4000);
+        return;
+      }
+      btn.disabled = true; btn.textContent = '刪除中…';
+      try { await api.removeSlot(btn.dataset.slot); toast('已刪除這個時段'); await load(); }
+      catch (err) { toast(`刪除失敗：${err.message}`); btn.disabled = false; btn.classList.remove('armed'); btn.textContent = '刪除'; }
     }
 
     function pickWeekends() {
@@ -688,7 +697,10 @@
     $('#next').onclick = () => moveMonth(1);
     $('#jump').onclick = () => { cursor = new Date(now.getFullYear(), now.getMonth(), 1); focusDay = todayKey(); load(); };
     $('#filters').onclick = e => { const b = e.target.closest('[data-filter]'); if (!b) return; filter = b.dataset.filter || null; render(); };
-    $('#detail').onclick = e => { const b = e.target.closest('[data-slot]'); if (b) cancelSlot(b.dataset.slot); };
+    $('#detail').onclick = e => {
+      const b = e.target.closest('[data-slot]'); if (b) return cancelSlot(b);
+      if (e.target.closest('#addMore')) { picked.clear(); picked.add(focusDay); render(); openSheet(); }
+    };
     $('#pickWeekends').onclick = pickWeekends;
     $('#clearPicks').onclick = () => { picked.clear(); render(); };
     $('#openSheet').onclick = openSheet;
