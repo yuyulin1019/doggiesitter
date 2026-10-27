@@ -3,24 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#fbf6ef" />
-  <title>毛孩保母時間</title>
+  <meta name="theme-color" content="#ffffff" />
+  <title>保母時間</title>
   <style>
     :root {
-      --bg: #fbf6ef;
+      --bg: #ffffff;
       --paper: #ffffff;
-      --ink: #2b2420;
-      --ink-2: #6f645c;
-      --ink-3: #a39890;
-      --line: #eee4d9;
-      --line-2: #f5ede4;
-      --brand: #d9734e;
-      --brand-ink: #b4542f;
-      --brand-soft: #fbe9e0;
+      --ink: #1a1a1a;
+      --ink-2: #666666;
+      --ink-3: #a3a3a3;
+      --line: #e8e8e8;
+      --line-2: #f4f4f4;
+      --brand: #1a1a1a;
+      --brand-ink: #000000;
+      --brand-soft: #f2f2f2;
       --ok: #4f8a5b;
-      --danger: #c2453a;
-      --radius: 16px;
-      --shadow: 0 1px 2px #5a3d2a0d, 0 8px 24px #5a3d2a0f;
+      --danger: #d03b30;
+      --radius: 12px;
+      --shadow: none;
       color-scheme: light;
     }
     * { box-sizing: border-box; }
@@ -39,17 +39,17 @@
     .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
     .logo { width: 40px; height: 40px; border-radius: 12px; background: var(--brand); display: grid; place-items: center; flex: none; }
     .logo svg { width: 24px; height: 24px; fill: #fff; }
-    .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: .2px; }
+    .brand h1 { margin: 0; font-size: 18px; font-weight: 700; }
     .brand p { margin: 0; font-size: 12px; color: var(--ink-2); }
     .who { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px; background: var(--paper); box-shadow: 0 0 0 1px var(--line); font-size: 13px; font-weight: 600; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; font-weight: 600; }
     .badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--brand)); }
-    .ghost { height: 32px; padding: 0 12px; border: 0; border-radius: 99px; background: transparent; color: var(--brand-ink); font-size: 13px; font-weight: 600; }
+    .ghost { height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-2); font-size: 13px; font-weight: 600; }
     .ghost:hover { background: var(--brand-soft); }
 
     /* ── 版面 ── */
     .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
-    .card { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow), 0 0 0 1px var(--line); }
+    .card { background: var(--paper); border-radius: var(--radius); border: 1px solid var(--line); }
 
     /* ── 月份列 ── */
     .month-bar { display: flex; align-items: center; gap: 6px; padding: 14px 14px 10px; }
@@ -58,7 +58,7 @@
     .icon-btn:hover { background: var(--line-2); }
     .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
     .pill { height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--paper); font-size: 13px; font-weight: 600; color: var(--ink-2); }
-    .pill:hover { border-color: #e0d3c5; color: var(--ink); }
+    .pill:hover { border-color: var(--ink-3); color: var(--ink); }
     .month-bar .spacer { flex: 1; }
 
     /* ── 保母篩選 ── */
@@ -69,16 +69,16 @@
     .filter[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 
     /* ── 保母操作提示 ── */
-    .guide { display: flex; gap: 10px; align-items: center; margin: 0 14px 12px; padding: 10px 12px; border-radius: 12px; background: var(--brand-soft); color: var(--brand-ink); font-size: 13px; }
-    .guide b { font-weight: 700; }
+    .guide { display: flex; gap: 10px; align-items: center; margin: 0 14px 10px; color: var(--ink-2); font-size: 13px; }
+    .guide b { font-weight: 600; color: var(--ink); }
     .guide .quick { margin-left: auto; display: flex; gap: 6px; flex: none; }
-    .guide .quick button { height: 28px; padding: 0 10px; border: 0; border-radius: 99px; background: #fff; color: var(--brand-ink); font-size: 12px; font-weight: 600; }
+    .guide .quick button { height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: 99px; background: #fff; color: var(--ink); font-size: 12px; font-weight: 600; }
 
     /* ── 月曆 ── */
     .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
     .weekdays { padding: 0 8px; }
     .weekdays span { text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 6px 0; }
-    .weekdays span:first-child, .weekdays span:last-child { color: var(--brand); }
+    .weekdays span:first-child, .weekdays span:last-child { color: var(--ink-3); }
     .grid { gap: 4px; padding: 4px 8px 10px; }
     .day {
       position: relative; min-width: 0; min-height: 96px; padding: 6px 5px 5px; border: 0; border-radius: 12px;
@@ -86,23 +86,23 @@
       transition: background .12s, box-shadow .12s;
     }
     .day:hover { background: var(--line-2); }
-    .day.outside .num { color: #d3c9bf; }
+    .day.outside .num { color: #d4d4d4; }
     .day.past { opacity: .55; }
     .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; color: var(--ink); }
     .day.today .num { background: var(--brand); color: #fff; }
-    .day.focus { background: #fff7f2; box-shadow: inset 0 0 0 2px #f0c3ae; }
-    .day.picked { background: var(--brand-soft); box-shadow: inset 0 0 0 2px var(--brand); }
+    .day.focus { background: var(--line-2); }
+    .day.picked { background: var(--line-2); box-shadow: inset 0 0 0 1.5px var(--ink); }
     .day.picked::after {
       content: ""; position: absolute; top: 7px; right: 7px; width: 16px; height: 16px; border-radius: 50%;
       background: var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.2l2.6 2.6L12 5.4' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;
     }
     .chips { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
     .chip {
-      display: flex; align-items: center; gap: 4px; min-width: 0; height: 20px; padding: 0 6px 0 5px;
-      border-radius: 6px; background: var(--t); color: var(--c); font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden;
-      border-left: 3px solid var(--c);
+      display: flex; align-items: center; gap: 4px; min-width: 0; height: 18px; padding: 0 2px;
+      color: var(--ink-2); font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden;
     }
-    .chip b { flex: none; font-weight: 700; }
+    .chip::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+    .chip b { flex: none; font-weight: 600; color: var(--ink); }
     .chip span { opacity: .85; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
     .more { font-size: 11px; color: var(--ink-2); padding-left: 4px; }
 
@@ -112,11 +112,11 @@
     .detail .sub { margin: 2px 0 14px; font-size: 13px; color: var(--ink-2); }
     .timeline { position: relative; margin: 4px 0 16px; }
     .axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-bottom: 6px; }
-    .track { position: relative; height: 26px; border-radius: 8px; background: repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px calc(100% / 6)); background-color: #fcfaf7; margin-bottom: 6px; box-shadow: inset 0 0 0 1px var(--line-2); }
-    .bar { position: absolute; top: 3px; bottom: 3px; border-radius: 6px; background: var(--c); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; padding: 0 7px; white-space: nowrap; overflow: hidden; }
+    .track { position: relative; height: 22px; border-radius: 6px; background: var(--line-2); margin-bottom: 6px; }
+    .bar { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: var(--c); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; padding: 0 7px; white-space: nowrap; overflow: hidden; }
     .slot-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-    .slot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #fcfaf7; box-shadow: inset 0 0 0 1px var(--line-2); }
-    .slot .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+    .slot { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line-2); }
+    .slot .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
     .slot .meta { min-width: 0; flex: 1; }
     .slot .name { font-size: 14px; font-weight: 700; }
     .slot .time { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
@@ -124,56 +124,56 @@
     .slot .cancel { border: 0; background: transparent; color: var(--danger); font-size: 13px; font-weight: 600; padding: 6px 8px; border-radius: 8px; }
     .slot .cancel:hover { background: #fbeae8; }
     .empty { text-align: center; padding: 20px 8px 8px; color: var(--ink-2); font-size: 13px; }
-    .empty svg { width: 40px; height: 40px; fill: #eadfd3; display: block; margin: 0 auto 8px; }
+    .empty svg { display: none; }
 
     /* ── 底部動作列（保母多選後出現） ── */
     .action-bar {
       position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translate(-50%, 0);
       width: min(520px, calc(100vw - 24px)); display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 18px;
-      background: var(--ink); color: #fff; border-radius: 20px; box-shadow: 0 12px 32px #2b24204d; z-index: 10;
+      background: var(--ink); color: #fff; border-radius: 14px; box-shadow: 0 8px 24px #0000002e; z-index: 10;
     }
     .action-bar .count { font-size: 14px; font-weight: 600; }
-    .action-bar .count small { display: block; font-size: 11.5px; font-weight: 500; color: #cfc5bd; }
-    .action-bar .clear { margin-left: auto; border: 0; background: transparent; color: #cfc5bd; font-size: 13px; padding: 8px; }
-    .primary { height: 44px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--brand); color: #fff; font-size: 15px; font-weight: 700; }
-    .primary:hover { background: var(--brand-ink); }
+    .action-bar .count small { display: block; font-size: 11.5px; font-weight: 500; color: #bdbdbd; }
+    .action-bar .clear { margin-left: auto; border: 0; background: transparent; color: #bdbdbd; font-size: 13px; padding: 8px; }
+    .primary { height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; }
+    .primary:hover { background: #333; }
     .primary:disabled { opacity: .5; cursor: default; }
 
     /* ── 時段面板 ── */
-    dialog { border: 0; padding: 0; border-radius: 22px; width: min(440px, calc(100vw - 24px)); color: var(--ink); box-shadow: 0 24px 80px #2b242040; }
-    dialog::backdrop { background: #2b242066; }
+    dialog { border: 0; padding: 0; border-radius: 16px; width: min(420px, calc(100vw - 24px)); color: var(--ink); box-shadow: 0 16px 48px #00000026; }
+    dialog::backdrop { background: #00000052; }
     .sheet { padding: 20px; }
     .sheet h3 { margin: 0 0 2px; font-size: 18px; }
     .sheet .sub { margin: 0 0 16px; font-size: 13px; color: var(--ink-2); }
     .presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-    .preset { text-align: left; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; }
+    .preset { text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
     .preset b { display: block; font-size: 15px; }
     .preset span { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-    .preset[aria-checked="true"] { border-color: var(--brand); background: var(--brand-soft); }
+    .preset[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
     .custom { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-    .custom select, .field input { height: 44px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; padding: 0 12px; font-size: 15px; }
+    .custom select, .field input { height: 44px; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 0 12px; font-size: 15px; }
     .custom select { flex: 1; }
     .field { display: block; margin-bottom: 18px; }
     .field span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
     .field input { width: 100%; }
     .sheet-foot { display: flex; gap: 8px; }
     .sheet-foot .primary { flex: 1; }
-    .secondary { height: 44px; padding: 0 16px; border: 0; border-radius: 14px; background: var(--line-2); font-weight: 600; }
+    .secondary { height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--line-2); font-weight: 600; }
     .form-error { min-height: 18px; margin: -8px 0 10px; color: var(--danger); font-size: 13px; }
 
     /* ── 無連結畫面 ── */
-    .gate { max-width: 420px; margin: 12vh auto 0; padding: 28px; text-align: center; }
+    .gate { max-width: 400px; margin: 10vh auto 0; padding: 28px 24px; text-align: center; border: 0; }
     .gate .logo { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 14px; }
     .gate .logo svg { width: 32px; height: 32px; }
     .gate h2 { margin: 0 0 6px; font-size: 20px; }
     .gate p { margin: 0 0 18px; color: var(--ink-2); font-size: 14px; }
     .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; text-align: left; }
-    .person { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; font-size: 15px; font-weight: 700; }
-    .person:hover { border-color: #e0d3c5; }
+    .person { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-size: 15px; font-weight: 700; }
+    .person:hover { border-color: var(--ink-3); }
     .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--t); color: var(--c); font-size: 14px; font-weight: 700; }
     .pin-step .avatar { width: 56px; height: 56px; font-size: 22px; margin: 0 auto 10px; }
-    .pin-input { display: block; width: 180px; height: 56px; margin: 0 auto 8px; border: 1.5px solid var(--line); border-radius: 14px; text-align: center; font-size: 26px; letter-spacing: 14px; padding-left: 14px; font-variant-numeric: tabular-nums; }
-    .pin-input:focus { outline: none; border-color: var(--brand); }
+    .pin-input { display: block; width: 180px; height: 56px; margin: 0 auto 8px; border: 1px solid var(--line); border-radius: 10px; text-align: center; font-size: 26px; letter-spacing: 14px; padding-left: 14px; font-variant-numeric: tabular-nums; }
+    .pin-input:focus { outline: none; border-color: var(--ink); }
     .gate .form-error { margin: 0 0 12px; }
     .gate .back { border: 0; background: none; color: var(--ink-2); font-size: 13px; padding: 8px; }
 
@@ -200,6 +200,7 @@
       .chips { width: 100%; gap: 2px; }
       .chip { height: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--c); }
       .chip b, .chip span { display: none; }
+      .chip::before { display: none; }
       .more { font-size: 10px; text-align: center; padding: 0; }
       .day.picked::after { top: 3px; right: 3px; width: 14px; height: 14px; background-size: 10px; }
       .presets { grid-template-columns: 1fr 1fr; }
@@ -215,8 +216,7 @@
 
   <main class="app">
     <header class="topbar">
-      <div class="logo"><svg><use href="#paw"/></svg></div>
-      <div class="brand"><h1>毛孩保母時間</h1><p id="tagline">誰有空，一眼就知道</p></div>
+      <div class="brand"><h1>保母時間</h1><p id="tagline" hidden></p></div>
       <div class="who" id="who" hidden>
         <span class="badge" id="badge"><i></i><span id="badgeText"></span></span>
         <button class="ghost" id="rename" hidden>改名字</button>
@@ -226,7 +226,6 @@
 
     <section class="card gate" id="gate" hidden>
       <div id="pickStep">
-        <div class="logo"><svg><use href="#paw"/></svg></div>
         <h2>你是誰？</h2>
         <p id="gateText">點自己的名字，再輸入你的 4 位數密碼。</p>
         <div class="people" id="people"></div>
@@ -430,7 +429,7 @@
         const people = await api.directory();
         let sitterIndex = 0;
         $('#people').innerHTML = people.map(p => {
-          const [c, t] = p.role === 'sitter' ? palette[sitterIndex++ % palette.length] : ['#6f645c', '#f1ebe4'];
+          const [c, t] = p.role === 'sitter' ? palette[sitterIndex++ % palette.length] : ['#666666', '#f2f2f2'];
           return `<button class="person" type="button" data-id="${p.id}" data-name="${esc(p.display_name)}" data-c="${c}" data-t="${t}"><span class="avatar" style="--c:${c};--t:${t}">${esc([...p.display_name][0])}</span>${esc(p.display_name)}</button>`;
         }).join('') || '<p>名單還是空的，請聯絡管理者。</p>';
       } catch (err) {
