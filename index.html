@@ -2,63 +2,670 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f5f5f7" />
-  <title>保母時間</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fbf6ef" />
+  <title>毛孩保母時間</title>
   <style>
-    :root{--ink:#1d1d1f;--muted:#86868b;--line:#e5e5e7;--paper:#fff;--bg:#f5f5f7;--blue:#007aff;--red:#ff3b30}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Segoe UI",sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}button,input,select{font:inherit;color:inherit}button{cursor:pointer}
-    .app{max-width:1260px;margin:0 auto;padding:20px 28px 30px}.toolbar{height:48px;display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.month-tools{display:flex;align-items:center;gap:8px}.nav{width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:#666;font-size:23px;line-height:1}.nav:hover,.manage:hover{background:#e9e9eb}.month-title{font-size:20px;font-weight:650;letter-spacing:-.35px;min-width:130px;text-align:center;margin:0}.today{height:31px;padding:0 11px;border:1px solid #dedee1;border-radius:8px;background:#fff;font-size:12px;font-weight:600;color:var(--blue);margin-left:7px}.who{display:flex;align-items:center;gap:8px}.who select{border:0;border-radius:9px;background:#fff;padding:9px 30px 9px 12px;min-width:112px;font-size:13px;font-weight:600;box-shadow:0 0 0 1px #e5e5e7}.manage{height:34px;padding:0 9px;border:0;border-radius:8px;background:transparent;color:var(--blue);font-size:13px;font-weight:550}
-    .calendar{background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px #0000000a,0 0 0 1px #e5e5e7}.weekdays,.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.weekdays{height:37px;border-bottom:1px solid var(--line);align-items:center}.weekdays span{text-align:center;color:#77777d;font-size:11px;font-weight:600}.weekdays span:first-child{color:#d04a43}.day{min-width:0;min-height:120px;padding:7px 7px 5px;border:0;border-right:1px solid #e9e9eb;border-bottom:1px solid #e9e9eb;background:#fff;text-align:left;vertical-align:top}.day:nth-child(7n){border-right:0}.day:hover{background:#fafafd}.day.outside{background:#fbfbfc}.date-line{height:23px;display:flex;justify-content:center;align-items:center;margin-bottom:4px}.date{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:500;color:#303035}.outside .date{color:#b9b9bf}.today-date .date{background:var(--red);color:white;font-weight:600}.events{display:flex;flex-direction:column;gap:3px}.event{display:flex;align-items:center;gap:5px;height:20px;min-width:0;padding:0 5px;border-radius:5px;font-size:10px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event-dot{width:6px;height:6px;flex:none;border-radius:50%}.event-name{overflow:hidden;text-overflow:ellipsis}.overflow{padding:0 5px;color:#66666b;font-size:10px;line-height:18px}.no-event{height:18px;color:#d5d5d9;font-size:10px;padding:2px 3px}.day.active{box-shadow:inset 0 0 0 2px #8bb6f0;background:#f7fbff}.footer{display:flex;justify-content:space-between;align-items:center;color:#85858a;font-size:11px;padding:9px 2px 0}.footer span:first-child{color:#66666c}.mode-switch{display:flex;gap:2px;background:#e9e9eb;border-radius:9px;padding:3px}.mode-switch button{border:0;border-radius:7px;background:transparent;color:#69696e;padding:7px 10px;font-size:12px;font-weight:550}.mode-switch button.active{background:#fff;color:#1d1d1f;box-shadow:0 1px 3px #0002}.who[hidden]{display:none}.day-detail{display:flex;align-items:center;gap:13px;background:#fff;border-radius:11px;box-shadow:0 0 0 1px #e5e5e7;padding:12px 15px;margin-top:10px;min-height:58px}.detail-date{font-size:13px;font-weight:650;white-space:nowrap}.detail-names{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.detail-person{display:inline-flex;align-items:center;gap:5px;border-radius:20px;background:#f4f4f6;padding:5px 9px;font-size:11px;font-weight:600}.detail-person i{width:7px;height:7px;border-radius:50%}.detail-empty{font-size:12px;color:#89898f}.detail-count{margin-left:auto;color:#77777d;font-size:11px;white-space:nowrap}
-    dialog{border:0;border-radius:15px;padding:0;width:min(410px,calc(100vw - 28px));box-shadow:0 24px 80px #0003;color:var(--ink)}dialog::backdrop{background:#0005;backdrop-filter:blur(2px)}.dialog-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--line)}.dialog-head h2{font-size:17px;margin:0;font-weight:650}.close{border:0;background:none;color:var(--blue);font-size:14px;padding:4px}.sitter-list{padding:6px 20px 4px}.sitter-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #eeeef0}.color-swatch{width:11px;height:11px;border-radius:50%;flex:none}.sitter-row input{min-width:0;flex:1;border:0;border-bottom:1px solid transparent;padding:6px 2px;font-size:14px;background:transparent;outline:0}.sitter-row input:focus{border-bottom-color:var(--blue)}.remove{border:0;background:none;color:var(--red);font-size:12px;padding:6px}.add-sitter{margin:12px 20px 3px;border:0;background:none;color:var(--blue);font-size:13px;padding:7px 0}.dialog-foot{display:flex;justify-content:flex-end;padding:12px 20px 18px}.save{border:0;border-radius:8px;background:var(--blue);color:white;font-weight:600;padding:8px 17px}.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,10px);background:#303034;color:white;border-radius:25px;padding:10px 16px;font-size:12px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
-    @media(max-width:720px){.app{padding:13px 9px 20px}.toolbar{height:auto;min-height:43px;margin-bottom:10px;gap:8px;flex-wrap:wrap}.month-tools{gap:2px}.month-title{font-size:17px;min-width:115px}.nav{width:30px;height:30px}.today{margin-left:3px;padding:0 8px}.who{gap:4px;margin-left:auto}.who select{min-width:88px;padding:8px 23px 8px 9px;font-size:12px}.manage{width:30px}.day{min-height:91px;padding:5px 3px}.date-line{height:22px;margin-bottom:3px}.event{height:17px;gap:3px;padding:0 3px;font-size:9px}.event-dot{width:5px;height:5px}.events{gap:2px}.overflow{font-size:9px;padding:0 2px}.no-event{height:14px}.weekdays{height:32px}.footer{font-size:10px}.mode-switch button{padding:7px 8px;font-size:11px}.day-detail{gap:8px;padding:10px}.detail-count{font-size:10px}}
-    @media(max-width:430px){.app{padding:10px 5px 16px}.month-title{font-size:15px;min-width:97px}.today{font-size:11px;padding:0 7px}.who select{min-width:76px;font-size:11px}.day{min-height:76px;padding:4px 2px}.date{font-size:11px;width:20px;height:20px}.event{height:16px;font-size:8px;padding:0 2px}.event-dot{width:4px;height:4px}.footer{gap:8px;font-size:9px}.mode-switch button{padding:6px 6px;font-size:10px}.detail-date{font-size:11px}.detail-person{padding:4px 7px;font-size:10px}.day-detail{flex-wrap:wrap}.detail-count{margin-left:0}}
-    [hidden]{display:none!important}.account{display:flex;align-items:center;gap:10px}.account-name{font-size:12px;font-weight:600}.account button{border:0;border-radius:8px;background:transparent;color:var(--blue);font-size:12px;padding:7px}.auth-screen,.pending-screen{max-width:380px;margin:10vh auto 0;background:#fff;border-radius:16px;padding:26px;box-shadow:0 1px 2px #0001,0 0 0 1px #e5e5e7}.auth-screen h2,.pending-screen h2{font-size:18px;margin:0 0 8px}.auth-screen p,.pending-screen p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 17px}.auth-form{display:flex;gap:8px}.auth-form input,.name-form input{min-width:0;flex:1;border:1px solid var(--line);border-radius:9px;padding:10px 11px;font-size:13px}.primary{border:0;border-radius:9px;background:var(--blue);color:#fff;padding:0 14px;font-size:12px;font-weight:600}.form-status{min-height:18px;margin-top:11px;color:#697b67;font-size:12px}.pending-screen button{border:0;background:var(--blue);color:#fff;border-radius:8px;padding:8px 13px;font-size:12px}.name-form{padding:20px;display:flex;gap:8px}.name-form .primary{min-height:38px}
+    :root {
+      --bg: #fbf6ef;
+      --paper: #ffffff;
+      --ink: #2b2420;
+      --ink-2: #6f645c;
+      --ink-3: #a39890;
+      --line: #eee4d9;
+      --line-2: #f5ede4;
+      --brand: #d9734e;
+      --brand-ink: #b4542f;
+      --brand-soft: #fbe9e0;
+      --ok: #4f8a5b;
+      --danger: #c2453a;
+      --radius: 16px;
+      --shadow: 0 1px 2px #5a3d2a0d, 0 8px 24px #5a3d2a0f;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Segoe UI", sans-serif;
+      font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+    .app { max-width: 1120px; margin: 0 auto; padding: 16px 16px calc(110px + env(safe-area-inset-bottom)); }
+
+    /* ── 頂部 ── */
+    .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .logo { width: 40px; height: 40px; border-radius: 12px; background: var(--brand); display: grid; place-items: center; flex: none; }
+    .logo svg { width: 24px; height: 24px; fill: #fff; }
+    .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: .2px; }
+    .brand p { margin: 0; font-size: 12px; color: var(--ink-2); }
+    .who { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px; background: var(--paper); box-shadow: 0 0 0 1px var(--line); font-size: 13px; font-weight: 600; }
+    .badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--brand)); }
+    .ghost { height: 32px; padding: 0 12px; border: 0; border-radius: 99px; background: transparent; color: var(--brand-ink); font-size: 13px; font-weight: 600; }
+    .ghost:hover { background: var(--brand-soft); }
+
+    /* ── 版面 ── */
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+    .card { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow), 0 0 0 1px var(--line); }
+
+    /* ── 月份列 ── */
+    .month-bar { display: flex; align-items: center; gap: 6px; padding: 14px 14px 10px; }
+    .month-title { margin: 0 6px; font-size: 20px; font-weight: 700; letter-spacing: -.2px; }
+    .icon-btn { width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); display: grid; place-items: center; }
+    .icon-btn:hover { background: var(--line-2); }
+    .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .pill { height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--paper); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+    .pill:hover { border-color: #e0d3c5; color: var(--ink); }
+    .month-bar .spacer { flex: 1; }
+
+    /* ── 保母篩選 ── */
+    .filters { display: flex; gap: 8px; padding: 0 14px 12px; overflow-x: auto; scrollbar-width: none; }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--paper); font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+    .filter i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+    .filter[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+    /* ── 保母操作提示 ── */
+    .guide { display: flex; gap: 10px; align-items: center; margin: 0 14px 12px; padding: 10px 12px; border-radius: 12px; background: var(--brand-soft); color: var(--brand-ink); font-size: 13px; }
+    .guide b { font-weight: 700; }
+    .guide .quick { margin-left: auto; display: flex; gap: 6px; flex: none; }
+    .guide .quick button { height: 28px; padding: 0 10px; border: 0; border-radius: 99px; background: #fff; color: var(--brand-ink); font-size: 12px; font-weight: 600; }
+
+    /* ── 月曆 ── */
+    .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .weekdays { padding: 0 8px; }
+    .weekdays span { text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 6px 0; }
+    .weekdays span:first-child, .weekdays span:last-child { color: var(--brand); }
+    .grid { gap: 4px; padding: 4px 8px 10px; }
+    .day {
+      position: relative; min-width: 0; min-height: 96px; padding: 6px 5px 5px; border: 0; border-radius: 12px;
+      background: transparent; text-align: left; display: flex; flex-direction: column; gap: 4px;
+      transition: background .12s, box-shadow .12s;
+    }
+    .day:hover { background: var(--line-2); }
+    .day.outside .num { color: #d3c9bf; }
+    .day.past { opacity: .55; }
+    .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; color: var(--ink); }
+    .day.today .num { background: var(--brand); color: #fff; }
+    .day.focus { background: #fff7f2; box-shadow: inset 0 0 0 2px #f0c3ae; }
+    .day.picked { background: var(--brand-soft); box-shadow: inset 0 0 0 2px var(--brand); }
+    .day.picked::after {
+      content: ""; position: absolute; top: 7px; right: 7px; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.2l2.6 2.6L12 5.4' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;
+    }
+    .chips { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .chip {
+      display: flex; align-items: center; gap: 4px; min-width: 0; height: 20px; padding: 0 6px 0 5px;
+      border-radius: 6px; background: var(--t); color: var(--c); font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden;
+      border-left: 3px solid var(--c);
+    }
+    .chip b { flex: none; font-weight: 700; }
+    .chip span { opacity: .85; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
+    .more { font-size: 11px; color: var(--ink-2); padding-left: 4px; }
+
+    /* ── 當日詳情 ── */
+    .detail { padding: 18px; position: sticky; top: 16px; }
+    .detail h2 { margin: 0; font-size: 17px; font-weight: 700; }
+    .detail .sub { margin: 2px 0 14px; font-size: 13px; color: var(--ink-2); }
+    .timeline { position: relative; margin: 4px 0 16px; }
+    .axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-bottom: 6px; }
+    .track { position: relative; height: 26px; border-radius: 8px; background: repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px calc(100% / 6)); background-color: #fcfaf7; margin-bottom: 6px; box-shadow: inset 0 0 0 1px var(--line-2); }
+    .bar { position: absolute; top: 3px; bottom: 3px; border-radius: 6px; background: var(--c); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; padding: 0 7px; white-space: nowrap; overflow: hidden; }
+    .slot-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .slot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #fcfaf7; box-shadow: inset 0 0 0 1px var(--line-2); }
+    .slot .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+    .slot .meta { min-width: 0; flex: 1; }
+    .slot .name { font-size: 14px; font-weight: 700; }
+    .slot .time { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .slot .note { font-size: 12px; color: var(--ink-3); }
+    .slot .cancel { border: 0; background: transparent; color: var(--danger); font-size: 13px; font-weight: 600; padding: 6px 8px; border-radius: 8px; }
+    .slot .cancel:hover { background: #fbeae8; }
+    .empty { text-align: center; padding: 20px 8px 8px; color: var(--ink-2); font-size: 13px; }
+    .empty svg { width: 40px; height: 40px; fill: #eadfd3; display: block; margin: 0 auto 8px; }
+
+    /* ── 底部動作列（保母多選後出現） ── */
+    .action-bar {
+      position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translate(-50%, 0);
+      width: min(520px, calc(100vw - 24px)); display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 18px;
+      background: var(--ink); color: #fff; border-radius: 20px; box-shadow: 0 12px 32px #2b24204d; z-index: 10;
+    }
+    .action-bar .count { font-size: 14px; font-weight: 600; }
+    .action-bar .count small { display: block; font-size: 11.5px; font-weight: 500; color: #cfc5bd; }
+    .action-bar .clear { margin-left: auto; border: 0; background: transparent; color: #cfc5bd; font-size: 13px; padding: 8px; }
+    .primary { height: 44px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--brand); color: #fff; font-size: 15px; font-weight: 700; }
+    .primary:hover { background: var(--brand-ink); }
+    .primary:disabled { opacity: .5; cursor: default; }
+
+    /* ── 時段面板 ── */
+    dialog { border: 0; padding: 0; border-radius: 22px; width: min(440px, calc(100vw - 24px)); color: var(--ink); box-shadow: 0 24px 80px #2b242040; }
+    dialog::backdrop { background: #2b242066; }
+    .sheet { padding: 20px; }
+    .sheet h3 { margin: 0 0 2px; font-size: 18px; }
+    .sheet .sub { margin: 0 0 16px; font-size: 13px; color: var(--ink-2); }
+    .presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .preset { text-align: left; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; }
+    .preset b { display: block; font-size: 15px; }
+    .preset span { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .preset[aria-checked="true"] { border-color: var(--brand); background: var(--brand-soft); }
+    .custom { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .custom select, .field input { height: 44px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; padding: 0 12px; font-size: 15px; }
+    .custom select { flex: 1; }
+    .field { display: block; margin-bottom: 18px; }
+    .field span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .field input { width: 100%; }
+    .sheet-foot { display: flex; gap: 8px; }
+    .sheet-foot .primary { flex: 1; }
+    .secondary { height: 44px; padding: 0 16px; border: 0; border-radius: 14px; background: var(--line-2); font-weight: 600; }
+    .form-error { min-height: 18px; margin: -8px 0 10px; color: var(--danger); font-size: 13px; }
+
+    /* ── 無連結畫面 ── */
+    .gate { max-width: 420px; margin: 12vh auto 0; padding: 28px; text-align: center; }
+    .gate .logo { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 14px; }
+    .gate .logo svg { width: 32px; height: 32px; }
+    .gate h2 { margin: 0 0 6px; font-size: 20px; }
+    .gate p { margin: 0 0 18px; color: var(--ink-2); font-size: 14px; }
+    .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; text-align: left; }
+    .person { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; font-size: 15px; font-weight: 700; }
+    .person:hover { border-color: #e0d3c5; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--t); color: var(--c); font-size: 14px; font-weight: 700; }
+    .pin-step .avatar { width: 56px; height: 56px; font-size: 22px; margin: 0 auto 10px; }
+    .pin-input { display: block; width: 180px; height: 56px; margin: 0 auto 8px; border: 1.5px solid var(--line); border-radius: 14px; text-align: center; font-size: 26px; letter-spacing: 14px; padding-left: 14px; font-variant-numeric: tabular-nums; }
+    .pin-input:focus { outline: none; border-color: var(--brand); }
+    .gate .form-error { margin: 0 0 12px; }
+    .gate .back { border: 0; background: none; color: var(--ink-2); font-size: 13px; padding: 8px; }
+
+    .toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translate(-50%, -8px); background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 16px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: .2s; z-index: 20; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .loading { opacity: .6; pointer-events: none; }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .detail { position: static; }
+    }
+    @media (max-width: 560px) {
+      .app { padding: 12px 10px calc(110px + env(safe-area-inset-bottom)); }
+      .brand p { display: none; }
+      .month-title { font-size: 18px; margin: 0 2px; }
+      .month-bar { padding: 12px 8px 8px; gap: 2px; }
+      .filters { padding: 0 10px 10px; }
+      .guide { margin: 0 10px 10px; flex-wrap: wrap; }
+      .guide .quick { margin-left: 0; }
+      .weekdays, .grid { padding-left: 4px; padding-right: 4px; }
+      .grid { gap: 2px; }
+      .day { min-height: 74px; padding: 4px 2px; align-items: center; border-radius: 10px; }
+      .num { width: 24px; height: 24px; font-size: 12.5px; }
+      .chips { width: 100%; gap: 2px; }
+      .chip { height: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--c); }
+      .chip b, .chip span { display: none; }
+      .more { font-size: 10px; text-align: center; padding: 0; }
+      .day.picked::after { top: 3px; right: 3px; width: 14px; height: 14px; background-size: 10px; }
+      .presets { grid-template-columns: 1fr 1fr; }
+      dialog { margin: auto 0 0; width: 100vw; max-width: 100vw; border-radius: 22px 22px 0 0; }
+      .sheet { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+    }
   </style>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="paw" viewBox="0 0 24 24"><path d="M12 13.2c-2.9 0-6 2.7-6 5.1 0 1.5 1.2 2.2 2.6 2.2 1.3 0 2.2-.6 3.4-.6s2.1.6 3.4.6c1.4 0 2.6-.7 2.6-2.2 0-2.4-3.1-5.1-6-5.1zM6.3 12.4c1.3-.4 1.8-2 1.3-3.6S5.7 6.3 4.4 6.7 2.6 8.7 3.1 10.3s1.9 2.5 3.2 2.1zm11.4 0c1.3.4 2.7-.5 3.2-2.1s-.1-3.2-1.3-3.6-2.7.5-3.2 2.1-.1 3.2 1.3 3.6zM9.4 8.7c1.4 0 2.4-1.5 2.4-3.3S10.8 2 9.4 2 7 3.5 7 5.4s1 3.3 2.4 3.3zm5.2 0c1.4 0 2.4-1.5 2.4-3.3S16 2 14.6 2s-2.4 1.5-2.4 3.4 1 3.3 2.4 3.3z"/></symbol>
+  </svg>
+
   <main class="app">
-    <header class="toolbar">
-      <div class="month-tools"><button class="nav" id="prev" aria-label="上個月">‹</button><h1 class="month-title" id="month"></h1><button class="nav" id="next" aria-label="下個月">›</button><button class="today" id="jump">今天</button></div>
-      <div class="account" id="account" hidden><span class="account-name" id="memberName"></span><button id="rename" hidden>改名字</button><button id="logout">登出</button></div>
-    </header>
-    <section class="auth-screen" id="authScreen">
-      <h2>登入查看排班</h2><p>輸入已加入名單的 Email，我們會寄送登入連結。</p>
-      <form class="auth-form" id="loginForm"><input type="email" id="email" required placeholder="Email" autocomplete="email"><button class="primary" type="submit">寄登入連結</button></form>
-      <div class="form-status" id="authStatus" role="status"></div>
-    </section>
-    <section class="pending-screen" id="pendingScreen" hidden><h2>這個帳號尚未加入名單</h2><p>請聯絡排班管理者加入你的 Email，再重新登入。</p><button id="retryAccess">重新確認</button></section>
-    <section id="calendarApp" hidden>
-      <div class="toolbar">
-        <div class="mode-switch" role="group" aria-label="使用模式"><button class="active" data-mode="view">查看空檔</button><button id="editMode" data-mode="edit" hidden>保母登記</button></div>
+    <header class="topbar">
+      <div class="logo"><svg><use href="#paw"/></svg></div>
+      <div class="brand"><h1>毛孩保母時間</h1><p id="tagline">誰有空，一眼就知道</p></div>
+      <div class="who" id="who" hidden>
+        <span class="badge" id="badge"><i></i><span id="badgeText"></span></span>
+        <button class="ghost" id="rename" hidden>改名字</button>
+        <button class="ghost" id="switchUser" hidden>換人</button>
       </div>
-      <section class="calendar" aria-label="保母可服務日期月曆"><div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div class="grid" id="grid"></div></section>
-      <section class="day-detail" id="dayDetail" aria-live="polite"></section>
-      <footer class="footer"><span id="hint">點選日期查看當天有哪些保母有空</span><span id="legend"></span></footer>
+    </header>
+
+    <section class="card gate" id="gate" hidden>
+      <div id="pickStep">
+        <div class="logo"><svg><use href="#paw"/></svg></div>
+        <h2>你是誰？</h2>
+        <p id="gateText">點自己的名字，再輸入你的 4 位數密碼。</p>
+        <div class="people" id="people"></div>
+      </div>
+      <form class="pin-step" id="pinStep" hidden>
+        <div class="avatar" id="pinAvatar"></div>
+        <h2 id="pinTitle"></h2>
+        <p>輸入你的 4 位數密碼</p>
+        <input class="pin-input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" aria-label="4 位數密碼" />
+        <div class="form-error" id="pinError" role="alert"></div>
+        <button class="primary" type="submit" id="pinSubmit" style="width:180px">進入</button>
+        <div><button class="back" type="button" id="pinBack">← 不是我</button></div>
+      </form>
+    </section>
+
+    <section class="layout" id="calendarApp" hidden>
+      <div class="card" id="calendarCard">
+        <div class="month-bar">
+          <button class="icon-btn" id="prev" aria-label="上個月"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <h2 class="month-title" id="month"></h2>
+          <button class="icon-btn" id="next" aria-label="下個月"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+          <span class="spacer"></span>
+          <button class="pill" id="jump">今天</button>
+        </div>
+        <div class="filters" id="filters" role="group" aria-label="篩選保母" hidden></div>
+        <div class="guide" id="guide" hidden>
+          <span><b>點日期可多選</b>，再一次設定時段</span>
+          <span class="quick"><button id="pickWeekends">選本月週末</button></span>
+        </div>
+        <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <aside class="card detail" id="detail" aria-live="polite"></aside>
     </section>
   </main>
-  <dialog id="nameDialog"><form class="name-form" id="nameForm"><input id="nameInput" required maxlength="30" placeholder="顯示名稱"><button class="primary" type="submit">儲存</button></form></dialog>
+
+  <div class="action-bar" id="actionBar" hidden>
+    <div class="count" id="pickCount"></div>
+    <button class="clear" id="clearPicks">清除</button>
+    <button class="primary" id="openSheet">設定時段</button>
+  </div>
+
+  <dialog id="slotDialog">
+    <form class="sheet" id="slotForm" method="dialog">
+      <h3>這幾天幾點有空？</h3>
+      <p class="sub" id="sheetDates"></p>
+      <div class="presets" id="presets" role="radiogroup" aria-label="時段"></div>
+      <div class="custom" id="custom" hidden>
+        <select id="startTime" aria-label="開始時間"></select><span>到</span><select id="endTime" aria-label="結束時間"></select>
+      </div>
+      <label class="field"><span>備註（選填）</span><input id="note" maxlength="60" placeholder="例如：可以幫忙洗澡、需提早說" /></label>
+      <div class="form-error" id="formError" role="alert"></div>
+      <div class="sheet-foot"><button class="secondary" type="button" id="cancelSheet">取消</button><button class="primary" type="submit" id="submitSlot">登記</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="nameDialog">
+    <form class="sheet" id="nameForm">
+      <h3>改顯示名字</h3>
+      <p class="sub">主人看到的會是這個名字。</p>
+      <label class="field"><span>名字</span><input id="nameInput" required maxlength="30" /></label>
+      <div class="sheet-foot"><button class="secondary" type="button" id="cancelName">取消</button><button class="primary" type="submit">儲存</button></div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status"></div>
+
   <script src="./supabase-config.js"></script>
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.95.0';
-    const config=window.SUPABASE_CONFIG;
-    const supabase=createClient(config.url,config.publishableKey);
-    const $=selector=>document.querySelector(selector),pad=n=>String(n).padStart(2,'0'),key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    const palette=[['#d9825c','#fbeee8'],['#608d69','#eaf3eb'],['#6687ad','#eaf0f8'],['#a77a9f','#f5edf4'],['#c3903d','#fbf3e3'],['#4e9c9a','#e6f4f2'],['#8781b2','#eeedf8'],['#c66f77','#f9e9eb']];
-    let cursor=new Date(2026,10,1),selected='2026-11-01',mode='view',session=null,member=null,members=[],availability={},channel=null;
-    const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    function paintStatus(message){$('#authStatus').textContent=message}
-    function openToast(message){const toast=$('#toast');toast.textContent=message;toast.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.classList.remove('show'),2200)}
-    async function sendLogin(event){event.preventDefault();const email=$('#email').value.trim();if(!email)return;paintStatus('正在寄送…');const {error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});paintStatus(error?`寄送失敗：${error.message}`:'登入連結已寄出，請查看信箱。')}
-    async function handleSession(nextSession){session=nextSession;member=null;$('#calendarApp').hidden=true;$('#pendingScreen').hidden=true;$('#account').hidden=!session;$('#authScreen').hidden=!!session;if(channel){await supabase.removeChannel(channel);channel=null}if(!session){mode='view';return}const {data,error}=await supabase.from('members').select('id,display_name,role').eq('id',session.user.id).maybeSingle();if(error){$('#pendingScreen').hidden=false;$('#pendingScreen p').textContent=`讀取帳號權限失敗：${error.message}`;return}if(!data){$('#pendingScreen').hidden=false;return}member=data;$('#memberName').textContent=data.display_name;$('#rename').hidden=false;$('#editMode').hidden=data.role!=='sitter';if(data.role!=='sitter')mode='view';$('#calendarApp').hidden=false;await loadCalendar();channel=supabase.channel('availability-live').on('postgres_changes',{event:'*',schema:'public',table:'availability'},()=>loadCalendar()).on('postgres_changes',{event:'*',schema:'public',table:'members'},()=>loadCalendar()).subscribe()}
-    async function loadCalendar(){if(!member)return;const [memberResult,availabilityResult]=await Promise.all([supabase.from('members').select('id,display_name,role').order('created_at'),supabase.from('availability').select('caregiver_id,available_on')]);if(memberResult.error||availabilityResult.error){openToast(memberResult.error?.message||availabilityResult.error?.message||'讀取排班失敗');return}members=(memberResult.data||[]).map((p,i)=>({...p,...palette[i%palette.length]}));availability={};for(const row of availabilityResult.data||[])(availability[row.available_on]??=[]).push(row.caregiver_id);render()}
-    function render(){if(!member)return;$('#month').textContent=`${cursor.getFullYear()} 年 ${cursor.getMonth()+1} 月`;$('#editMode').classList.toggle('active',mode==='edit');document.querySelector('[data-mode="view"]').classList.toggle('active',mode==='view');$('#hint').textContent=mode==='view'?'點選日期查看當天有哪些保母有空':'點日期登記／取消你的有空時間';$('#legend').innerHTML=members.filter(p=>p.role==='sitter').map(p=>`<span style="color:${p.color}">●</span> ${esc(p.display_name)}`).join('　');const y=cursor.getFullYear(),m=cursor.getMonth(),first=new Date(y,m,1),total=new Date(y,m+1,0).getDate(),rows=Math.ceil((first.getDay()+total)/7),start=new Date(y,m,1-first.getDay()),grid=$('#grid');grid.innerHTML='';for(let i=0;i<rows*7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const dayKey=key(d),list=(availability[dayKey]||[]).map(id=>members.find(p=>p.id===id)).filter(p=>p&&p.role==='sitter'),cell=document.createElement('button');cell.className=`day ${d.getMonth()===m?'':'outside'} ${dayKey===selected?'active':''} ${dayKey===key(new Date())?'today-date':''}`;cell.setAttribute('aria-label',`${d.getMonth()+1}月${d.getDate()}日，${list.length?list.map(p=>p.display_name).join('、')+'有空':'無人登記'}`);let events=list.slice(0,4).map(p=>`<span class="event" style="background:${p.tint};color:${p.color}" title="${esc(p.display_name)}"><i class="event-dot" style="background:${p.color}"></i><span class="event-name">${esc(p.display_name)}</span></span>`).join('');if(list.length>4)events+=`<span class="overflow">+${list.length-4} 位</span>`;if(!list.length)events='<span class="no-event">&nbsp;</span>';cell.innerHTML=`<span class="date-line"><span class="date">${d.getDate()}</span></span><span class="events">${events}</span>`;cell.onclick=()=>mode==='edit'?toggle(dayKey):selectDay(dayKey);grid.append(cell)}renderDayDetail()}
-    function selectDay(dayKey){selected=dayKey;render()}
-    function renderDayDetail(){if(!selected)return;const [y,m,d]=selected.split('-').map(Number),date=new Date(y,m-1,d),list=(availability[selected]||[]).map(id=>members.find(p=>p.id===id)).filter(p=>p&&p.role==='sitter');$('#dayDetail').innerHTML=`<span class="detail-date">${m} 月 ${d} 日（${['日','一','二','三','四','五','六'][date.getDay()]}）</span><span class="detail-names">${list.length?list.map(p=>`<span class="detail-person"><i style="background:${p.color}"></i>${esc(p.display_name)}</span>`).join(''):'<span class="detail-empty">目前沒有人登記有空</span>'}</span><span class="detail-count">${list.length} 位有空</span>`}
-    async function toggle(dayKey){if(member?.role!=='sitter')return;selected=dayKey;const found=(availability[dayKey]||[]).includes(member.id);const result=found?await supabase.from('availability').delete().eq('caregiver_id',member.id).eq('available_on',dayKey):await supabase.from('availability').insert({caregiver_id:member.id,available_on:dayKey});if(result.error){openToast(`更新失敗：${result.error.message}`);return}await loadCalendar();openToast(found?'已取消這天的空檔':'已登記這天有空')}
-    async function changeName(event){event.preventDefault();const name=$('#nameInput').value.trim();if(!name||!member)return;const {error}=await supabase.from('members').update({display_name:name}).eq('id',member.id);if(error){openToast(`更新失敗：${error.message}`);return}member.display_name=name;$('#memberName').textContent=name;$('#nameDialog').close();await loadCalendar()}
-    $('#loginForm').addEventListener('submit',sendLogin);$('#retryAccess').onclick=()=>handleSession(session);$('#prev').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()-1,1);selected=key(cursor);render()};$('#next').onclick=()=>{cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);selected=key(cursor);render()};$('#jump').onclick=()=>{cursor=new Date();selected=key(cursor);render()};document.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{if(button.dataset.mode==='edit'&&member?.role!=='sitter')return;mode=button.dataset.mode;render()});$('#rename').onclick=()=>{$('#nameInput').value=member?.display_name||'';$('#nameDialog').showModal()};$('#nameForm').addEventListener('submit',changeName);$('#logout').onclick=()=>supabase.auth.signOut();supabase.auth.onAuthStateChange((_event,nextSession)=>setTimeout(()=>handleSession(nextSession),0));const {data:{session:existingSession}}=await supabase.auth.getSession();await handleSession(existingSession);
+    const $ = s => document.querySelector(s);
+    const pad = n => String(n).padStart(2, '0');
+    const key = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+    const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const shortTime = t => t.endsWith(':00') ? String(Number(t.slice(0, 2))) : t.replace(/^0/, '');
+    const palette = [['#d9734e', '#fbebe3'], ['#4f8a5b', '#e7f2e8'], ['#4f78b0', '#e6eef8'], ['#a0629a', '#f4e8f3'], ['#c08a2d', '#f8efdc'], ['#3d918d', '#e2f2f1'], ['#7a6fb5', '#ecebf8'], ['#c25b6a', '#f8e6e9']];
+    const PRESETS = [
+      { id: 'morning', label: '上午', start: '08:00', end: '12:00' },
+      { id: 'afternoon', label: '下午', start: '13:00', end: '18:00' },
+      { id: 'evening', label: '晚上', start: '18:00', end: '22:00' },
+      { id: 'allday', label: '整天', start: '08:00', end: '22:00' },
+      { id: 'custom', label: '自訂', start: null, end: null },
+    ];
+    const DAY_START = 6 * 60, DAY_END = 24 * 60;
+
+    // ── 資料存取：正式版走 Supabase 函式；?demo=owner / ?demo=sitter 用假資料 ──
+    const demoRole = new URLSearchParams(location.search).get('demo');
+    const TOKEN_KEY = 'doggiesitter-token';
+    let token = readTokenFromHash() || safeGet(TOKEN_KEY);
+
+    function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+    function safeSet(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
+    function readTokenFromHash() {
+      const m = location.hash.match(/(?:^#|[#&]k=)([0-9a-f]{64})/i);
+      if (!m) return null;
+      safeSet(TOKEN_KEY, m[1].toLowerCase());
+      history.replaceState(null, '', location.pathname + location.search);
+      return m[1].toLowerCase();
+    }
+
+    async function createSupabaseApi() {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.95.0');
+      const cfg = window.SUPABASE_CONFIG;
+      const supabase = createClient(cfg.url, cfg.publishableKey, { auth: { persistSession: false } });
+      const call = async (fn, args) => {
+        const { data, error } = await supabase.rpc(fn, { p_token: token, ...args });
+        if (error) throw Object.assign(new Error(error.message), { code: error.code });
+        return data;
+      };
+      return {
+        directory: async () => { const { data, error } = await supabase.rpc('calendar_directory'); if (error) throw new Error(error.message); return data; },
+        login: async (id, pin) => {
+          const { data, error } = await supabase.rpc('calendar_login', { p_member_id: id, p_pin: pin });
+          if (error) throw new Error(error.message);
+          if (data.error) throw new Error(data.error);
+          return data.token;
+        },
+        logout: () => supabase.rpc('calendar_logout', { p_token: token }),
+        read: (start, end) => call('calendar_read', { p_start: start, p_end: end }),
+        addSlots: (dates, start, end, note) => call('calendar_add_slots', { p_dates: dates, p_start_time: start, p_end_time: end, p_note: note || null }),
+        removeSlot: id => call('calendar_remove_slot', { p_slot_id: id }),
+        rename: name => call('calendar_rename', { p_name: name }),
+      };
+    }
+
+    function createDemoApi(role) {
+      const sitters = [{ id: 's1', display_name: '佑宥' }, { id: 's2', display_name: '楚涵' }, { id: 's3', display_name: '小米' }];
+      const me = role === 'sitter' ? 's1' : null;
+      const today = new Date(); let n = 0;
+      const slots = [];
+      const add = (offset, who, s, e, note) => { const d = new Date(today); d.setDate(d.getDate() + offset); slots.push({ id: `d${n++}`, caregiver_id: who, available_on: key(d), starts_at: s, ends_at: e, note: note || null }); };
+      [[0, 's1', '13:00', '18:00'], [1, 's2', '08:00', '12:00', '可接送'], [1, 's1', '18:00', '22:00'], [2, 's3', '08:00', '22:00'], [3, 's2', '13:00', '18:00'], [3, 's3', '18:00', '22:00'], [5, 's1', '08:00', '12:00'], [5, 's2', '08:00', '22:00'], [5, 's3', '13:00', '18:00'], [8, 's2', '18:00', '22:00'], [9, 's1', '13:00', '17:30'], [12, 's3', '08:00', '12:00']].forEach(a => add(...a));
+      const visible = () => slots.filter(s => !me || s.caregiver_id === me);
+      return {
+        read: async (start, end) => ({ role: role === 'sitter' ? 'sitter' : 'owner', profile_id: me, profiles: sitters.filter(s => !me || s.id === me), slots: visible().filter(s => s.available_on >= start && s.available_on <= end).sort((a, b) => (a.available_on + a.starts_at).localeCompare(b.available_on + b.starts_at)) }),
+        addSlots: async (dates, start, end, note) => {
+          if (dates.some(d => slots.some(s => s.caregiver_id === me && s.available_on === d && toMin(s.starts_at) < toMin(end) && toMin(start) < toMin(s.ends_at)))) throw new Error('有些日期和你已登記的時段重疊，請先取消舊時段或換個時間。');
+          dates.forEach(d => slots.push({ id: `d${n++}`, caregiver_id: me, available_on: d, starts_at: start, ends_at: end, note: note || null }));
+          return dates.length;
+        },
+        removeSlot: async id => { const i = slots.findIndex(s => s.id === id && s.caregiver_id === me); if (i < 0) throw new Error('找不到這個時段，或它不是你登記的。'); slots.splice(i, 1); return true; },
+        rename: async name => { sitters.find(s => s.id === me).display_name = name; return name; },
+      };
+    }
+
+    // ── 狀態 ──
+    const now = new Date();
+    let api = null, data = null, colors = {};
+    let cursor = new Date(now.getFullYear(), now.getMonth(), 1);
+    let focusDay = key(now);
+    let filter = null;
+    const picked = new Set();
+    let preset = 'afternoon';
+
+    const isSitter = () => data?.role === 'sitter';
+    const todayKey = () => key(new Date());
+    const me = () => data?.profiles.find(p => p.id === data.profile_id);
+    const slotsOn = day => (data?.slots || []).filter(s => s.available_on === day && (!filter || s.caregiver_id === filter));
+    const nameOf = id => data?.profiles.find(p => p.id === id)?.display_name || '保母';
+
+    function toast(message) {
+      const el = $('#toast'); el.textContent = message; el.classList.add('show');
+      clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400);
+    }
+
+    function gridRange() {
+      const y = cursor.getFullYear(), m = cursor.getMonth();
+      const first = new Date(y, m, 1), total = new Date(y, m + 1, 0).getDate();
+      const rows = Math.ceil((first.getDay() + total) / 7);
+      const start = new Date(y, m, 1 - first.getDay());
+      const end = new Date(start); end.setDate(start.getDate() + rows * 7 - 1);
+      return { start, end, rows };
+    }
+
+    async function load() {
+      const { start, end } = gridRange();
+      $('#calendarCard').classList.add('loading');
+      try {
+        data = await api.read(key(start), key(end));
+        colors = {};
+        data.profiles.forEach((p, i) => { colors[p.id] = palette[i % palette.length]; });
+        showApp();
+        render();
+      } catch (err) {
+        if (err.code === '28000' || /連結/.test(err.message)) { token = null; safeSet(TOKEN_KEY, null); showGate('登入已失效，請重新選擇你的名字。'); }
+        else toast(`讀取失敗：${err.message}`);
+      } finally {
+        $('#calendarCard').classList.remove('loading');
+      }
+    }
+
+    let loginPerson = null;
+    async function showGate(text) {
+      data = null; picked.clear();
+      $('#gate').hidden = false; $('#calendarApp').hidden = true; $('#who').hidden = true; $('#actionBar').hidden = true;
+      $('#pickStep').hidden = false; $('#pinStep').hidden = true;
+      $('#gateText').textContent = text || '點自己的名字，再輸入你的 4 位數密碼。';
+      try {
+        const people = await api.directory();
+        let sitterIndex = 0;
+        $('#people').innerHTML = people.map(p => {
+          const [c, t] = p.role === 'sitter' ? palette[sitterIndex++ % palette.length] : ['#6f645c', '#f1ebe4'];
+          return `<button class="person" type="button" data-id="${p.id}" data-name="${esc(p.display_name)}" data-c="${c}" data-t="${t}"><span class="avatar" style="--c:${c};--t:${t}">${esc([...p.display_name][0])}</span>${esc(p.display_name)}</button>`;
+        }).join('') || '<p>名單還是空的，請聯絡管理者。</p>';
+      } catch (err) {
+        $('#people').innerHTML = `<p>讀取名單失敗：${esc(err.message)}</p>`;
+      }
+    }
+
+    function openPin(button) {
+      loginPerson = button.dataset.id;
+      const av = $('#pinAvatar');
+      av.style.setProperty('--c', button.dataset.c); av.style.setProperty('--t', button.dataset.t);
+      av.textContent = [...button.dataset.name][0];
+      $('#pinTitle').textContent = `嗨，${button.dataset.name}`;
+      $('#pinError').textContent = ''; $('#pinInput').value = '';
+      $('#pickStep').hidden = true; $('#pinStep').hidden = false;
+      $('#pinInput').focus();
+    }
+
+    async function submitPin(event) {
+      event.preventDefault();
+      const pin = $('#pinInput').value.trim();
+      if (!/^\d{4}$/.test(pin)) { $('#pinError').textContent = '請輸入 4 位數字。'; return; }
+      $('#pinSubmit').disabled = true;
+      try {
+        token = await api.login(loginPerson, pin);
+        safeSet(TOKEN_KEY, token);
+        await load();
+      } catch (err) {
+        $('#pinError').textContent = err.message; $('#pinInput').value = ''; $('#pinInput').focus();
+      } finally {
+        $('#pinSubmit').disabled = false;
+      }
+    }
+
+    async function switchUser() {
+      if (demoRole) { location.search = ''; return; }
+      try { await api.logout(); } catch {}
+      token = null; safeSet(TOKEN_KEY, null);
+      showGate();
+    }
+
+    function showApp() {
+      $('#gate').hidden = true; $('#calendarApp').hidden = false; $('#who').hidden = false;
+      const sitter = isSitter();
+      $('#badgeText').textContent = sitter ? (me()?.display_name || '保母') : '主人檢視';
+      $('#badge').style.setProperty('--c', sitter ? colors[data.profile_id]?.[0] : 'var(--ink-3)');
+      $('#rename').hidden = !sitter;
+      $('#switchUser').hidden = false;
+      $('#tagline').textContent = sitter ? '登記你有空的時段' : '誰有空，一眼就知道';
+      $('#guide').hidden = !sitter;
+      $('#filters').hidden = sitter || data.profiles.length < 2;
+    }
+
+    function render() {
+      $('#month').textContent = `${cursor.getFullYear()} 年 ${cursor.getMonth() + 1} 月`;
+      renderFilters();
+      renderGrid();
+      renderDetail();
+      renderActionBar();
+    }
+
+    function renderFilters() {
+      if (isSitter()) return;
+      const all = `<button class="filter" aria-pressed="${!filter}" data-filter="">全部</button>`;
+      $('#filters').innerHTML = all + data.profiles.map(p => `<button class="filter" style="--c:${colors[p.id][0]}" aria-pressed="${filter === p.id}" data-filter="${p.id}"><i></i>${esc(p.display_name)}</button>`).join('');
+    }
+
+    function renderGrid() {
+      const { start, rows } = gridRange();
+      const month = cursor.getMonth(), today = todayKey(), sitter = isSitter();
+      const grid = $('#grid'); grid.innerHTML = '';
+      for (let i = 0; i < rows * 7; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        const k = key(d), list = slotsOn(k), past = k < today;
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = ['day', d.getMonth() !== month && 'outside', k === today && 'today', past && 'past', k === focusDay && 'focus', picked.has(k) && 'picked'].filter(Boolean).join(' ');
+        if (sitter) cell.setAttribute('aria-pressed', picked.has(k));
+        const label = list.length ? list.map(s => `${nameOf(s.caregiver_id)} ${s.starts_at}到${s.ends_at}`).join('、') : '沒有人登記';
+        cell.setAttribute('aria-label', `${d.getMonth() + 1}月${d.getDate()}日，${label}`);
+        const shown = list.slice(0, 3).map(s => {
+          const [c, t] = colors[s.caregiver_id] || palette[0];
+          const who = sitter ? '' : `<b>${esc(nameOf(s.caregiver_id))}</b>`;
+          return `<span class="chip" style="--c:${c};--t:${t}">${who}<span>${shortTime(s.starts_at)}–${shortTime(s.ends_at)}</span></span>`;
+        }).join('');
+        const more = list.length > 3 ? `<span class="more">+${list.length - 3}</span>` : '';
+        cell.innerHTML = `<span class="num">${d.getDate()}</span><span class="chips">${shown}${more}</span>`;
+        cell.onclick = () => onDayClick(k, past);
+        grid.append(cell);
+      }
+    }
+
+    function onDayClick(k, past) {
+      focusDay = k;
+      if (isSitter() && !past) picked.has(k) ? picked.delete(k) : picked.add(k);
+      else if (isSitter() && past && !slotsOn(k).length) toast('過去的日期不能登記');
+      render();
+    }
+
+    function renderDetail() {
+      const d = parseKey(focusDay), list = slotsOn(focusDay), sitter = isSitter();
+      const title = `${d.getMonth() + 1} 月 ${d.getDate()} 日（${WEEK[d.getDay()]}）`;
+      let sub, body;
+      if (!list.length) {
+        sub = sitter ? '你這天還沒登記時段' : (filter ? `${esc(nameOf(filter))}這天沒有空` : '這天還沒有人登記');
+        body = `<div class="empty"><svg><use href="#paw"/></svg>${sitter ? '在月曆上點選日期，再按「設定時段」。' : '可以換一天看看，或用上方篩選找特定保母。'}</div>`;
+      } else {
+        const people = new Set(list.map(s => s.caregiver_id)).size;
+        sub = sitter ? `你登記了 ${list.length} 個時段` : `${people} 位保母有空`;
+        const ticks = [6, 9, 12, 15, 18, 21, 24].map(h => `<span>${h}</span>`).join('');
+        const span = DAY_END - DAY_START;
+        const bars = list.map(s => {
+          const left = Math.max(0, (toMin(s.starts_at) - DAY_START) / span * 100);
+          const width = Math.max(4, (Math.min(DAY_END, toMin(s.ends_at)) - Math.max(DAY_START, toMin(s.starts_at))) / span * 100);
+          const c = colors[s.caregiver_id]?.[0];
+          return `<div class="track"><div class="bar" style="--c:${c};left:${left}%;width:${width}%">${sitter ? '' : esc(nameOf(s.caregiver_id))}</div></div>`;
+        }).join('');
+        const items = list.map(s => `<li class="slot" style="--c:${colors[s.caregiver_id]?.[0]}"><span class="dot"></span><div class="meta">${sitter ? '' : `<div class="name">${esc(nameOf(s.caregiver_id))}</div>`}<div class="time">${s.starts_at} – ${s.ends_at}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>${sitter ? `<button class="cancel" data-slot="${s.id}">取消</button>` : ''}</li>`).join('');
+        body = `<div class="timeline"><div class="axis">${ticks}</div>${bars}</div><ul class="slot-list">${items}</ul>`;
+      }
+      $('#detail').innerHTML = `<h2>${title}</h2><p class="sub">${sub}</p>${body}`;
+    }
+
+    function renderActionBar() {
+      const n = picked.size;
+      $('#actionBar').hidden = !isSitter() || n === 0;
+      if (!n) return;
+      const days = [...picked].sort().map(k => { const d = parseKey(k); return `${d.getMonth() + 1}/${d.getDate()}`; });
+      $('#pickCount').innerHTML = `已選 ${n} 天<small>${esc(days.slice(0, 4).join('、'))}${n > 4 ? ' …' : ''}</small>`;
+    }
+
+    // ── 時段面板 ──
+    const timeOptions = (() => { const out = []; for (let m = DAY_START; m <= DAY_END; m += 30) out.push(`${pad(Math.floor(m / 60))}:${pad(m % 60)}`); return out; })();
+    $('#startTime').innerHTML = timeOptions.slice(0, -1).map(t => `<option>${t}</option>`).join('');
+    $('#endTime').innerHTML = timeOptions.slice(1).map(t => `<option>${t}</option>`).join('');
+    $('#startTime').value = '09:00'; $('#endTime').value = '17:00';
+
+    function renderPresets() {
+      $('#presets').innerHTML = PRESETS.map(p => `<button type="button" class="preset" role="radio" aria-checked="${preset === p.id}" data-preset="${p.id}"><b>${p.label}</b><span>${p.start ? `${p.start} – ${p.end}` : '自己選時間'}</span></button>`).join('');
+      $('#custom').hidden = preset !== 'custom';
+    }
+
+    function chosenRange() {
+      if (preset === 'custom') return [$('#startTime').value, $('#endTime').value];
+      const p = PRESETS.find(x => x.id === preset); return [p.start, p.end];
+    }
+
+    function openSheet() {
+      const days = [...picked].sort();
+      $('#sheetDates').textContent = days.map(k => { const d = parseKey(k); return `${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）`; }).join('、');
+      $('#formError').textContent = '';
+      $('#note').value = '';
+      renderPresets(); updateSubmitLabel();
+      $('#slotDialog').showModal();
+    }
+
+    function updateSubmitLabel() {
+      const [s, e] = chosenRange();
+      $('#submitSlot').textContent = `登記 ${picked.size} 天 · ${s}–${e}`;
+    }
+
+    async function submitSlots(event) {
+      event.preventDefault();
+      const [start, end] = chosenRange();
+      if (toMin(end) <= toMin(start)) { $('#formError').textContent = '結束時間要晚於開始時間。'; return; }
+      const btn = $('#submitSlot'); btn.disabled = true;
+      try {
+        const count = await api.addSlots([...picked].sort(), start, end, $('#note').value.trim());
+        $('#slotDialog').close();
+        picked.clear();
+        toast(`已登記 ${count} 天 ${start}–${end}`);
+        await load();
+      } catch (err) {
+        $('#formError').textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function cancelSlot(id) {
+      const s = data.slots.find(x => x.id === id);
+      if (!s || !confirm(`取消 ${s.available_on.slice(5).replace('-', '/')} ${s.starts_at}–${s.ends_at} 這個時段？`)) return;
+      try { await api.removeSlot(id); toast('已取消這個時段'); await load(); }
+      catch (err) { toast(`取消失敗：${err.message}`); }
+    }
+
+    function pickWeekends() {
+      const y = cursor.getFullYear(), m = cursor.getMonth(), total = new Date(y, m + 1, 0).getDate(), today = todayKey();
+      for (let d = 1; d <= total; d++) { const dt = new Date(y, m, d), k = key(dt); if ((dt.getDay() === 0 || dt.getDay() === 6) && k >= today) picked.add(k); }
+      render();
+    }
+
+    function moveMonth(delta) {
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1);
+      const t = new Date();
+      focusDay = cursor.getFullYear() === t.getFullYear() && cursor.getMonth() === t.getMonth() ? key(t) : key(cursor);
+      load();
+    }
+
+    // ── 事件 ──
+    $('#prev').onclick = () => moveMonth(-1);
+    $('#next').onclick = () => moveMonth(1);
+    $('#jump').onclick = () => { cursor = new Date(now.getFullYear(), now.getMonth(), 1); focusDay = todayKey(); load(); };
+    $('#filters').onclick = e => { const b = e.target.closest('[data-filter]'); if (!b) return; filter = b.dataset.filter || null; render(); };
+    $('#detail').onclick = e => { const b = e.target.closest('[data-slot]'); if (b) cancelSlot(b.dataset.slot); };
+    $('#pickWeekends').onclick = pickWeekends;
+    $('#clearPicks').onclick = () => { picked.clear(); render(); };
+    $('#openSheet').onclick = openSheet;
+    $('#presets').onclick = e => { const b = e.target.closest('[data-preset]'); if (!b) return; preset = b.dataset.preset; renderPresets(); updateSubmitLabel(); };
+    $('#startTime').onchange = $('#endTime').onchange = updateSubmitLabel;
+    $('#cancelSheet').onclick = () => $('#slotDialog').close();
+    $('#slotForm').addEventListener('submit', submitSlots);
+    $('#rename').onclick = () => { $('#nameInput').value = me()?.display_name || ''; $('#nameDialog').showModal(); };
+    $('#cancelName').onclick = () => $('#nameDialog').close();
+    $('#nameForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = $('#nameInput').value.trim(); if (!name) return;
+      try { await api.rename(name); $('#nameDialog').close(); toast('名字已更新'); await load(); }
+      catch (err) { toast(`更新失敗：${err.message}`); }
+    });
+    $('#people').onclick = e => { const b = e.target.closest('[data-id]'); if (b) openPin(b); };
+    $('#pinStep').addEventListener('submit', submitPin);
+    $('#pinInput').oninput = e => { if (/^\d{4}$/.test(e.target.value)) $('#pinStep').requestSubmit(); };
+    $('#pinBack').onclick = () => { $('#pickStep').hidden = false; $('#pinStep').hidden = true; };
+    $('#switchUser').onclick = switchUser;
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && data) load(); });
+    setInterval(() => { if (!document.hidden && data && !$('#slotDialog').open) load(); }, 60000);
+
+    async function start() {
+      if (demoRole) { api = createDemoApi(demoRole); return load(); }
+      api ??= await createSupabaseApi();
+      if (!token) return showGate();
+      load();
+    }
+    start();
   </script>
 </body>
 </html>
