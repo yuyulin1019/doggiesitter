@@ -41,9 +41,14 @@
     .logo svg { width: 24px; height: 24px; fill: #fff; }
     .brand h1 { margin: 0; font-size: 18px; font-weight: 700; }
     .brand p { margin: 0; font-size: 12px; color: var(--ink-2); }
-    .who { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; font-weight: 600; }
-    .badge .face { font-size: 16px; line-height: 1; }
+    .who { margin-left: auto; position: relative; }
+    .me-btn { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 4px; border: 0; border-radius: 99px; background: transparent; font-size: 14px; font-weight: 600; }
+    .me-btn:hover, .me-btn[aria-expanded="true"] { background: var(--line-2); }
+    .me-face { width: 32px; height: 32px; border-radius: 50%; background: var(--c, #5a5a5a); color: #fff; display: grid; place-items: center; font-size: 17px; font-weight: 700; line-height: 1; }
+    .chev { width: 16px; height: 16px; fill: none; stroke: var(--ink-3); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .menu { position: absolute; right: 0; top: 46px; z-index: 15; min-width: 150px; padding: 6px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px #0000001a; }
+    .menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; font-size: 14px; }
+    .menu button:hover { background: var(--line-2); }
     .faces { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 14px; }
     .faces button { aspect-ratio: 1; border: 0; border-radius: 10px; background: transparent; font-size: 24px; line-height: 1; padding: 0; }
     .faces button:hover { background: var(--line-2); }
@@ -57,6 +62,7 @@
 
     /* ── 版面 ── */
     .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+    .layout.solo { grid-template-columns: minmax(0, 1fr); }
     .card { background: var(--paper); border-radius: var(--radius); border: 1px solid var(--line); }
 
     /* ── 月份列 ── */
@@ -235,9 +241,14 @@
     <header class="topbar">
       <div class="brand"><h1>保母時間</h1><p id="tagline" hidden></p></div>
       <div class="who" id="who" hidden>
-        <span class="badge" id="badge"><span class="face" id="badgeFace"></span><span id="badgeText"></span></span>
-        <button class="ghost" id="rename" hidden>設定</button>
-        <button class="ghost" id="switchUser" hidden>換人</button>
+        <button class="me-btn" id="meBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="me-face" id="badgeFace"></span><span class="me-name" id="badgeText"></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="menu" id="meMenu" role="menu" hidden>
+          <button type="button" role="menuitem" id="rename" hidden>個人設定</button>
+          <button type="button" role="menuitem" id="switchUser" hidden>換人</button>
+        </div>
       </div>
     </header>
 
@@ -512,6 +523,7 @@
       $('#gate').hidden = true; $('#calendarApp').hidden = false; $('#who').hidden = false;
       const sitter = isSitter();
       $('#badgeFace').textContent = face(me());
+      $('#badgeFace').style.setProperty('--c', sitter ? colors[data.profile_id]?.[0] : '#5a5a5a');
       $('#badgeText').textContent = me()?.display_name || (sitter ? '保母' : '主人');
       $('#rename').hidden = !data.me;
       $('#switchUser').hidden = false;
@@ -568,6 +580,11 @@
 
     function renderDetail() {
       const d = parseKey(focusDay), list = slotsOn(focusDay), sitter = isSitter();
+      // 保母這天沒登記就不顯示詳情卡，月曆佔滿整個寬度。
+      const hide = sitter && !list.length;
+      $('#detail').hidden = hide;
+      $('#calendarApp').classList.toggle('solo', hide);
+      if (hide) return;
       const title = `${d.getMonth() + 1} 月 ${d.getDate()} 日（${WEEK[d.getDay()]}）`;
       let sub, body;
       if (!list.length) {
@@ -715,6 +732,11 @@
     };
     $('#pinBack').onclick = () => { $('#pickStep').hidden = false; $('#pinStep').hidden = true; };
     $('#switchUser').onclick = switchUser;
+    const closeMenu = () => { $('#meMenu').hidden = true; $('#meBtn').setAttribute('aria-expanded', 'false'); };
+    $('#meBtn').onclick = e => { e.stopPropagation(); const open = $('#meMenu').hidden; $('#meMenu').hidden = !open; $('#meBtn').setAttribute('aria-expanded', String(open)); };
+    $('#meMenu').addEventListener('click', closeMenu);
+    document.addEventListener('click', e => { if (!e.target.closest('#who')) closeMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden && data) load(); });
     setInterval(() => { if (!document.hidden && data && !$('#slotDialog').open) load(); }, 60000);
 
